@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug azbridge",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/azbridge",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build (debug)",
+            "env": {},
+            "sourceLanguages": ["rust"]
+        },
+        {
+            "name": "Debug Current Test",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${command:rust-analyzer.debugSingle}",
+            "sourceLanguages": ["rust"]
+        }
+    ]
+}
