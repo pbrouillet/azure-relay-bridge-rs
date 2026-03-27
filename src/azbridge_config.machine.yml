@@ -1,0 +1,27 @@
+# Azure Relay Bridge - Machine Configuration
+#
+# This file is loaded from:
+#   Linux:   /etc/azbridge/azbridge_config.machine.yml
+#   Windows: %PROGRAMDATA%\Microsoft\AzureBridge\azbridge_config.machine.yml
+#
+# User configuration overrides these settings.
+# See CONFIG.md for details.
+
+# AzureRelayConnectionString:
+# AzureRelayEndpoint: sb://your-namespace.servicebus.windows.net
+# LogLevel: INFO
+# GatewayPorts: false
+# ExitOnForwardFailure: false
+# ConnectTimeout: 60
+# ConnectionAttempts: 1
+# KeepAliveInterval: 30
+
+# LocalForward:
+#   - RelayName: myrelay
+#     BindAddress: 127.0.0.1
+#     BindPort: 8080
+
+# RemoteForward:
+#   - RelayName: myrelay
+#     Host: localhost
+#     HostPort: 8080

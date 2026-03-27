@@ -15,6 +15,7 @@ mod service;
 mod socket;
 mod stream_pump;
 mod tcp;
+mod tui;
 mod udp;
 
 use clap::Parser;
@@ -24,6 +25,11 @@ use tracing::info;
 async fn main() -> anyhow::Result<()> {
     // Parse CLI arguments
     let cli = cli::Cli::parse();
+
+    // Handle TUI mode
+    if cli.tui {
+        return tui::run().await;
+    }
 
     // Handle Windows Service commands
     #[cfg(windows)]
