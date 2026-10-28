@@ -1,0 +1,15 @@
+[package]
+name = "azbridge-config"
+version = "0.1.0"
+edition = "2024"
+description = "Shared azbridge configuration model, validation, and parsers"
+
+[features]
+typescript = ["dep:ts-rs"]
+
+[dependencies]
+regex = "1"
+serde = { workspace = true }
+serde_yaml = "0.9"
+thiserror = { workspace = true }
+ts-rs = { version = "12", optional = true }
