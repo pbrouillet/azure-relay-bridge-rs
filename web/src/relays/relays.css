@@ -1,0 +1,27 @@
+.relay-map-panel, .relay-map-section { min-width: 0; }
+.relay-map-section { margin: 20px 0 32px; padding: 16px; border: 1px solid var(--cp-border); background: var(--cp-surface); }
+.relay-map-heading { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.relay-map-heading h3 { margin: 0; overflow-wrap: anywhere; }
+.relay-map-section .fui-Badge { border-radius: 0; }
+.relay-map-counts, .relay-map-reasons { overflow-wrap: anywhere; }
+.relay-map-diagram { margin: 16px 0; }
+.relay-map-diagram .designer-pagination { margin-bottom: 12px; }
+.relay-route-node .profile-node-detail { -webkit-line-clamp: 1; }
+.relay-route-status { color: var(--cp-text-muted); }
+.relay-map-success { color: var(--cp-success); }
+.relay-map-warning { color: var(--cp-warning); }
+.relay-map-hint { margin: 8px 0 0; font-size: 0.8125rem; }
+.relay-map-summary { margin: 12px 0; padding: 12px; border: 1px solid var(--cp-border); background: var(--cp-surface-soft); }
+.relay-map-diagnosis { margin: 0 0 12px; overflow-wrap: anywhere; }
+.relay-map-categories { display: flex; flex-wrap: wrap; gap: 8px; }
+.relay-map-categories .fui-Button, .reconcile-dialog .fui-Input, .reconcile-dialog .fui-Select { border-radius: 0; }
+.reconcile-dialog section { margin: 16px 0; }
+.reconcile-dialog .table-scroll .fui-Table { min-width: 720px; }
+.reconcile-dialog .fui-Input { min-width: 96px; }
+.reconcile-results { padding-left: 20px; overflow-wrap: anywhere; }
+.relay-map-section .table-scroll .fui-Table { min-width: 1040px; }
+.relay-map-section .table-scroll .fui-TableCell { padding: 12px; }
+.relay-map-section .table-scroll .fui-Button { white-space: normal; text-align: left; }
+@media (max-width: 720px) {
+  .relay-map-section { padding: 12px; }
+}

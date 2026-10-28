@@ -1,0 +1,139 @@
+:root {
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+.app-shell {
+  --cp-bg: var(--colorNeutralBackground2);
+  --cp-bg-elevated: var(--colorNeutralBackground1);
+  --cp-surface: var(--colorNeutralBackground1);
+  --cp-surface-soft: var(--colorNeutralBackground3);
+  --cp-border: var(--colorNeutralStroke2);
+  --cp-border-strong: var(--colorNeutralStrokeAccessible);
+  --cp-text: var(--colorNeutralForeground1);
+  --cp-text-muted: var(--colorNeutralForeground2);
+  --cp-text-soft: var(--colorNeutralForeground3);
+  --cp-accent: var(--colorBrandForeground1);
+  --cp-accent-hover: var(--colorBrandForegroundLinkHover);
+  --cp-accent-soft: var(--colorBrandBackground2);
+  --cp-success: var(--colorStatusSuccessForeground1);
+  --cp-danger: var(--colorStatusDangerForeground1);
+  --cp-warning: var(--colorStatusWarningForeground1);
+  --cp-link: var(--colorBrandForegroundLink);
+  --cp-card-shadow: var(--shadow4);
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 "Segoe UI", sans-serif; }
+.app-shell.fui-FluentProvider:not([data-portal-node]) { min-height: 100vh; background: var(--cp-bg); color: var(--cp-text); font-size: 16px; line-height: 1.5; }
+a { color: var(--cp-link); }
+h1 { margin: 12px 0 16px; letter-spacing: -0.025em; }
+h2 { font-size: 1.25rem; margin: 0 0 16px; }
+h3 { font-size: 1.1rem; }
+p { margin: 8px 0 20px; }
+main { margin: 0; padding: 40px 32px 64px; min-height: 75vh; }
+.topbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; gap: 24px; border-bottom: 1px solid var(--cp-border); background: var(--cp-bg-elevated); }
+.brand { color: var(--cp-text); text-decoration: none; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+.brand-identity { display: inline-flex; align-items: center; gap: 8px; }
+.brand-mark { flex: none; }
+.brand-wordmark { display: block; object-fit: contain; }
+.brand-descriptor { font-size: 0.875rem; font-weight: 400; color: var(--cp-text-muted); border-left: 1px solid var(--cp-border); padding-left: 20px; margin-left: 8px; }
+.header-actions, .identity, .actions, .page-heading { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.header-actions { justify-content: flex-end; gap: 24px; }
+.appearance-picker { display: flex; align-items: center; gap: 12px; flex: none; }
+.appearance-picker label { white-space: nowrap; font-size: 0.875rem; }
+.appearance-picker .fui-Dropdown { min-width: 132px; width: 132px; border-radius: 0; }
+.appearance-picker .fui-Dropdown__button { border-radius: 0; }
+.page-heading { justify-content: space-between; margin-bottom: 24px; }
+.page-heading > div { min-width: 0; overflow-wrap: anywhere; }
+.eyebrow { color: var(--cp-accent); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; }
+.fui-Card.form-card, .fui-Card.workspace-card, .fui-Card.secret { border: 1px solid var(--cp-border); border-radius: 0; padding: 24px; box-shadow: var(--cp-card-shadow); }
+.form-card, .secret { margin-bottom: 24px; }
+.form-card .fui-CardHeader h2, .workspace-card h2 { margin: 0; }
+.inline-form { display: flex; align-items: end; flex-wrap: wrap; gap: 16px; }
+.inline-form > .fui-Field { flex: 1; min-width: 180px; }
+.workspace-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 24px; }
+.fui-Card.workspace-card { min-width: 0; gap: 16px; padding: 20px; }
+.workspace-card-heading { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
+.workspace-summary { display: grid; gap: 2px; min-width: 0; }
+.workspace-card h2 { font-size: 1.125rem; line-height: 1.4; min-width: 0; }
+.workspace-name.fui-Button { justify-content: start; min-width: 0; min-height: 32px; max-width: 100%; padding: 0; border: 0; font: inherit; text-align: left; color: var(--cp-accent); }
+.workspace-name > span { min-width: 0; overflow-wrap: anywhere; }
+.workspace-region { color: var(--cp-text-muted); font-size: 0.8125rem; }
+.workspace-card-heading > .fui-Badge { flex: none; margin-top: 6px; }
+.workspace-metadata { display: grid; gap: 4px; min-width: 0; margin: 0; font-size: 0.8125rem; }
+.workspace-metadata dt { color: var(--cp-text-muted); }
+.workspace-metadata dd { min-width: 0; margin: 0; }
+.workspace-actions.fui-CardFooter { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--cp-border); }
+.workspace-actions > .fui-Button { flex: 1 1 auto; }
+.fui-Button.destructive { color: var(--cp-danger); }
+.back.fui-Button { margin-bottom: 24px; }
+.mono, .mono input, .mono textarea, code { font-family: Consolas, "Courier New", Courier, monospace; overflow-wrap: anywhere; }
+.muted { color: var(--cp-text-muted); }
+.danger { color: var(--cp-danger); }
+.notice { margin: 16px 0; }
+.loading-state { padding: 32px; }
+.tabs.fui-TabList { flex-wrap: wrap; border-bottom: 1px solid var(--cp-border); margin: 24px 0 32px; }
+.table-scroll { overflow-x: auto; background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 0; }
+.table-scroll .fui-Table { min-width: 560px; }
+.table-scroll .fui-TableHeader { background: var(--cp-surface-soft); }
+.table-scroll .fui-TableHeaderCell, .table-scroll .fui-TableCell { padding: 16px; }
+.table-scroll .fui-TableCell { vertical-align: top; overflow-wrap: anywhere; }
+.table-scroll .actions { min-width: 210px; }
+.empty { padding: 32px; border: 1px dashed var(--cp-border-strong); border-radius: 0; color: var(--cp-text-muted); }
+.resource-empty { display: flex; align-items: center; justify-content: center; gap: 32px; background: var(--cp-surface); }
+.resource-empty img { display: block; flex: none; width: 192px; max-width: 100%; height: auto; }
+.resource-empty h3 { color: var(--cp-text); margin: 0 0 8px; }
+.resource-empty p { max-width: 58ch; margin: 0 0 8px; }
+.resource-empty .empty-hint { font-size: 0.875rem; margin-bottom: 0; }
+.split { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; }
+.profile-list { display: flex; flex-direction: column; gap: 12px; }
+.profile-item.fui-Button { justify-content: start; text-align: left; padding: 12px; }
+.profile-item > span > span { display: block; font-size: 0.8125rem; font-weight: 400; color: var(--cp-text-muted); }
+.profile-item.selected { background: var(--cp-accent-soft); border-color: var(--cp-accent); color: var(--cp-accent); }
+.profile-detail { min-width: 0; }
+.editor { margin: 20px 0 32px; }
+.yaml-editor { height: 440px; min-height: 240px; width: 100%; border: 1px solid var(--cp-border-strong); resize: vertical; overflow: hidden; }
+.yaml-editor:focus-within { outline: 2px solid var(--cp-accent); outline-offset: -2px; }
+.yaml-editor .monaco-editor .suggest-widget, .yaml-editor .monaco-editor .monaco-hover { border-radius: 0; }
+.editor-toolbar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.editor-loading { padding: 24px; }
+.editor-help { margin-top: 8px; font-size: 0.875rem; }
+.import-dialog.fui-DialogSurface { width: min(900px, calc(100vw - 32px)); max-width: 900px; max-height: calc(100dvh - 32px); border-radius: 0; }
+.import-dialog .fui-DialogContent { overflow-y: auto; min-height: 0; }
+.import-review { display: grid; gap: 16px; min-width: 0; }
+.import-file.fui-Card { border-radius: 0; padding: 16px; border: 1px solid var(--cp-border); }
+.import-file h3 { margin: 0; overflow-wrap: anywhere; }
+.import-file ul, .import-pairing ul { padding-left: 20px; overflow-wrap: anywhere; }
+.import-file details { min-width: 0; }
+.import-file summary { cursor: pointer; }
+.import-preview.fui-Textarea { width: 100%; margin-top: 8px; border-radius: 0; }
+.import-preview textarea { min-height: 200px; font-family: Consolas, "Courier New", monospace; font-size: 0.8125rem; }
+.fui-Card.secret { border-color: var(--cp-warning); }
+.signin { max-width: 1320px; margin: 0 auto; padding-top: 72px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: start; }
+.signin-copy { min-width: 0; }
+.signin h1 { font-size: clamp(32px, 4vw, 52px); line-height: 1.1; margin: 16px 0 24px; }
+.signin-copy > p { max-width: 600px; color: var(--cp-text-muted); }
+.signin-copy > .fui-Button { margin: 16px 0 24px; }
+.signin-artwork { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; width: 100%; min-height: 400px; margin-top: 20px; }
+.signin-artwork .brand-mark { width: min(60%, 256px); height: auto; flex-shrink: 0; }
+.signin-artwork img { width: min(80%, 300px); height: auto; }
+.device-code { display: block; font-size: 2rem; letter-spacing: 0.15em; padding: 12px 0; user-select: all; }
+footer { padding: 20px 32px; text-align: center; font-size: 0.8125rem; color: var(--cp-text-muted); border-top: 1px solid var(--cp-border); }
+@media (max-width: 960px) {
+  .topbar { align-items: start; flex-wrap: wrap; }
+  .brand-descriptor { display: none; }
+  .header-actions { justify-content: start; gap: 16px; }
+}
+@media (max-width: 720px) {
+  main { padding: 24px 16px 40px; }
+  .topbar { padding: 16px; flex-direction: column; }
+  .split { grid-template-columns: 1fr; }
+  .profile-list { flex-direction: row; flex-wrap: wrap; }
+  .inline-form { align-items: stretch; }
+  .inline-form > .fui-Field { flex-basis: 100%; min-width: 0; }
+  .signin { padding-top: 40px; grid-template-columns: 1fr; gap: 24px; }
+  .signin-artwork { max-width: 600px; min-height: 280px; margin: 0 auto; }
+  .resource-empty { flex-direction: column; align-items: start; gap: 20px; padding: 24px; }
+  .resource-empty img { width: 160px; align-self: center; }
+}

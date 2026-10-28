@@ -1,0 +1,13 @@
+{
+  "yaml": "GatewayPorts: true\nLocalForward:\n- RelayName: example\n  BindPort: -53\n- RelayName: example\n  BindLocalSocket: /tmp/listen.sock\n- RelayName: example\n  Bindings:\n  - BindPort: 8080\n    PortName: web\n    BindAddress: dev.example.test\nRemoteForward:\n- RelayName: example\n  Bindings:\n  - HostPort: 443\n    Http: true\n    Path: /api\n  - HostPort: -53\n    Host: dns.example.test\n  - LocalSocket: /tmp/target.sock\n# - RelayName: example\n#   BindAddress: dev.example.test\n#   BindPort: 8081\n#   PortName: legacy\n# - Host: old.example.test\n#   HostPort: 8082\n",
+  "endpoints": [
+    { "id": "local-0-0", "forwardGroup": "local-0", "relayName": "example", "direction": "listener", "protocol": "udp", "host": "0.0.0.0", "port": 53, "portName": "53U", "explicitPortName": false, "disabled": false },
+    { "id": "local-1-0", "forwardGroup": "local-1", "relayName": "example", "direction": "listener", "protocol": "socket", "socket": "/tmp/listen.sock", "port": 0, "portName": "sock", "explicitPortName": false, "disabled": false },
+    { "id": "local-2-0", "forwardGroup": "local-2", "relayName": "example", "direction": "listener", "protocol": "tcp", "host": "dev.example.test", "port": 8080, "portName": "web", "explicitPortName": true, "disabled": false },
+    { "id": "remote-0-0", "forwardGroup": "remote-0", "relayName": "example", "direction": "destination", "protocol": "http", "host": "localhost", "port": 443, "portName": "443", "explicitPortName": false, "disabled": false, "path": "/api" },
+    { "id": "remote-0-1", "forwardGroup": "remote-0", "relayName": "example", "direction": "destination", "protocol": "udp", "host": "dns.example.test", "port": 53, "portName": "53U", "explicitPortName": false, "disabled": false },
+    { "id": "remote-0-2", "forwardGroup": "remote-0", "relayName": "example", "direction": "destination", "protocol": "socket", "socket": "/tmp/target.sock", "port": 0, "portName": "0", "explicitPortName": false, "disabled": false },
+    { "id": "disabled-0", "forwardGroup": "disabled-0", "relayName": "example", "direction": "listener", "protocol": "tcp", "host": "dev.example.test", "port": 8081, "portName": "legacy", "explicitPortName": true, "disabled": true },
+    { "id": "disabled-1", "forwardGroup": "disabled-1", "relayName": "example", "direction": "destination", "protocol": "tcp", "host": "old.example.test", "port": 8082, "portName": "8082", "explicitPortName": false, "disabled": true }
+  ]
+}

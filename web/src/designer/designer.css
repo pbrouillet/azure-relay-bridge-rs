@@ -1,0 +1,40 @@
+.designer-history, .designer-toolbar { margin: 16px 0; }
+.designer-view-toolbar, .designer-pagination { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.designer-view-toolbar { justify-content: space-between; margin-bottom: 12px; }
+.designer-view-toolbar > .fui-Field { min-width: 180px; }
+.designer-pagination { font-size: 0.875rem; }
+.designer-scope { font-size: 0.875rem; }
+.designer-canvas { width: 100%; min-width: 0; overflow-x: auto; border: 1px solid var(--cp-border-strong); }
+.designer-flow { width: 100%; }
+.profile-designer .react-flow {
+  --xy-background-color: var(--cp-surface);
+  --xy-node-background-color: var(--cp-surface);
+  --xy-node-color: var(--cp-text);
+  --xy-node-border: 1px solid var(--cp-border-strong);
+  --xy-node-border-radius: 0;
+  --xy-edge-stroke: var(--cp-border-strong);
+  --xy-edge-label-color: var(--cp-text);
+  --xy-edge-label-background-color: var(--cp-surface);
+  --xy-handle-background-color: var(--cp-accent);
+  --xy-handle-border-color: var(--cp-surface);
+  --xy-controls-button-background-color: var(--cp-surface);
+  --xy-controls-button-background-color-hover: var(--cp-surface-soft);
+  --xy-controls-button-color: var(--cp-text);
+  --xy-controls-button-border-color: var(--cp-border);
+  --xy-background-pattern-dots-color: var(--cp-border);
+  --xy-attribution-background-color: var(--cp-surface);
+}
+.profile-designer .react-flow__attribution a { color: var(--cp-text-muted); }
+.profile-designer .react-flow__controls-button { border-radius: 0; }
+.profile-node { display: flex; flex-direction: column; gap: 4px; width: 280px; height: 132px; padding: 12px; background: var(--cp-surface); color: var(--cp-text); border: 1px solid var(--cp-border-strong); border-radius: 0; }
+.profile-node strong, .profile-node-port-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-node strong { font-size: 14px; }
+.profile-node span { display: block; font-size: 13px; line-height: 18px; }
+.profile-node-detail { display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.profile-node-port-name { color: var(--cp-text-muted); }
+.profile-node-warning { border-color: var(--cp-warning); }
+.profile-designer .selected .profile-node { outline: 2px solid var(--cp-accent); }
+.designer-inspector { margin: 16px 0; border: 1px solid var(--cp-border); padding: 16px; background: var(--cp-surface); }
+.designer-form, .designer-advanced { display: grid; gap: 12px; }
+.designer-form .actions { margin-top: 8px; }
+.designer-advanced { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); padding: 12px 0; }

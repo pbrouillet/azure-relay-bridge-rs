@@ -1,0 +1,37 @@
+# Synthetic jump-box destinations. Built for an older client layout.
+GatewayPorts: true
+LogLevel: DEBUG3
+RemoteForward:
+  - RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-two.example.test/;SharedAccessKeyName=FAKE-SERVER;SharedAccessKey=NOT-A-REAL-SERVER-KEY;EntityPath=example-relay
+    Bindings:
+      - Host: legacy-17.example.test
+        HostPort: 443
+        PortName: legacy-17
+      - Host: legacy-18.example.test
+        HostPort: 443
+        PortName: legacy-18
+      - Host: legacy-19.example.test
+        HostPort: 443
+        PortName: legacy-19
+      - Host: legacy-20.example.test
+        HostPort: 443
+        PortName: legacy-20
+      - Host: legacy-21.example.test
+        HostPort: 443
+        PortName: legacy-21
+      - Host: legacy-22.example.test
+        HostPort: 443
+        PortName: legacy-22
+      - Host: legacy-23.example.test
+        HostPort: 443
+        PortName: legacy-23
+      - Host: svc-10.example.test
+        HostPort: 443
+        PortName: service-10-legacy
+      - Host: svc-11.example.test
+        HostPort: 443
+        PortName: service-11
+      - Host: svc-01.example.test
+        HostPort: 443
+        PortName: service-01

@@ -1,0 +1,125 @@
+# Synthetic dev-station listeners. These hosts and credentials are deliberately fake.
+# Each listener binds the target hostname (mapped locally); the server forwards to that host on 443.
+LogLevel: VERBOSE
+LocalForward:
+  - BindAddress: svc-01.example.test
+    BindPort: 44301
+    PortName: service-01
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-02.example.test
+    BindPort: 44302
+    PortName: service-02
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-03.example.test
+    BindPort: 44303
+    PortName: service-03
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-04.example.test
+    BindPort: 44304
+    PortName: service-04
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-05.example.test
+    BindPort: 44305
+    PortName: service-05
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-06.example.test
+    BindPort: 44306
+    PortName: service-06
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-07.example.test
+    BindPort: 44307
+    PortName: service-07
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-08.example.test
+    BindPort: 44308
+    PortName: service-08
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-09.example.test
+    BindPort: 44309
+    PortName: service-09
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-10.example.test
+    BindPort: 44310
+    PortName: service-10
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-11.example.test
+    BindPort: 44311
+    PortName: service-11
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-12.example.test
+    BindPort: 44312
+    PortName: service-12
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-13.example.test
+    BindPort: 44313
+    PortName: service-13
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-14.example.test
+    BindPort: 44314
+    PortName: service-14
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-15.example.test
+    BindPort: 44315
+    PortName: service-15
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+  - BindAddress: svc-16.example.test
+    BindPort: 44316
+    PortName: service-16
+    RelayName: example-relay
+    ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY;EntityPath=example-relay
+# Disabled entries keep their explanations, not their credential lines.
+# - BindAddress: legacy-17.example.test
+#   BindPort: 4431
+#   PortName: legacy-17
+#   RelayName: example-relay
+#   ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY-01;EntityPath=example-relay
+# - BindAddress: legacy-18.example.test
+#   BindPort: 4432
+#   PortName: legacy-18
+#   RelayName: example-relay
+#   ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY-02;EntityPath=example-relay
+# - BindAddress: legacy-19.example.test
+#   BindPort: 4433
+#   PortName: legacy-19
+#   RelayName: example-relay
+#   ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY-03;EntityPath=example-relay
+# - BindAddress: legacy-20.example.test
+#   BindPort: 4434
+#   PortName: legacy-20
+#   RelayName: example-relay
+#   ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY-04;EntityPath=example-relay
+# - BindAddress: legacy-21.example.test
+#   BindPort: 44301
+#   PortName: legacy-21
+#   RelayName: example-relay
+#   ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY-05;EntityPath=example-relay
+# - BindAddress: legacy-22.example.test
+#   BindPort: 44302
+#   PortName: legacy-22
+#   RelayName: example-relay
+#   ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY-06;EntityPath=example-relay
+# - BindAddress: legacy-23.example.test
+#   BindPort: 44303
+#   PortName: legacy-23
+#   RelayName: example-relay
+#   ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY-07;EntityPath=example-relay
+# - BindAddress: svc-10.example.test
+#   BindPort: 44310
+#   PortName: service-10-legacy
+#   RelayName: example-relay
+#   ConnectionString: Endpoint=sb://fake-one.example.test/;SharedAccessKeyName=FAKE-CLIENT;SharedAccessKey=NOT-A-REAL-KEY-08;EntityPath=example-relay
