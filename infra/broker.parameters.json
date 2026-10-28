@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": { "value": "${AZURE_ENV_NAME}" },
+    "location": { "value": "${AZURE_LOCATION}" },
+    "name": { "value": "${AZURE_CONTAINER_APP_NAME}" },
+    "containerAppsEnvironmentName": { "value": "${AZURE_CONTAINER_ENVIRONMENT_NAME}" },
+    "environmentDefaultDomain": { "value": "${AZURE_CONTAINER_ENVIRONMENT_DEFAULT_DOMAIN}" },
+    "registryName": { "value": "${AZURE_CONTAINER_REGISTRY_NAME}" },
+    "identityName": { "value": "${BROKER_IDENTITY_NAME}" },
+    "identityResourceId": { "value": "${BROKER_IDENTITY_RESOURCE_ID}" },
+    "identityPrincipalId": { "value": "${BROKER_IDENTITY_PRINCIPAL_ID}" },
+    "identityClientId": { "value": "${BROKER_IDENTITY_CLIENT_ID}" },
+    "vaultUri": { "value": "${AZURE_KEY_VAULT_URI}" },
+    "storageAccountName": { "value": "${AZURE_STORAGE_ACCOUNT_NAME}" },
+    "relayResourceGroupName": { "value": "${AZURE_RELAY_RESOURCE_GROUP}" },
+    "githubClientId": { "value": "${GITHUB_CLIENT_ID}" },
+    "bootstrapAdminIds": { "value": "${BOOTSTRAP_ADMIN_IDS}" },
+    "allowedLocations": { "value": "${ALLOWED_LOCATIONS}" },
+    "imageName": { "value": "${SERVICE_BROKER_IMAGE_NAME}" }
+  }
+}

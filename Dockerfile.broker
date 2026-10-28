@@ -1,0 +1,31 @@
+# syntax=docker/dockerfile:1
+FROM node:22-bookworm-slim AS web-build
+WORKDIR /build/web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+COPY web/ ./
+RUN npm run build
+
+FROM rust:1-bookworm AS broker-build
+ARG CARGO_BUILD_JOBS=2
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends pkg-config libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /build
+COPY . .
+RUN cargo build --release --locked -p azbridge-broker
+
+FROM debian:bookworm-slim AS runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates libssl3 \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 10001 broker \
+    && useradd --uid 10001 --gid broker --no-create-home --shell /usr/sbin/nologin broker
+WORKDIR /app
+COPY --from=broker-build /build/target/release/azbridge-broker /usr/local/bin/azbridge-broker
+COPY --from=web-build /build/web/dist /app/web/dist
+ENV LISTEN_ADDR=0.0.0.0:8080 \
+    STATIC_DIR=/app/web/dist
+USER 10001:10001
+EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/azbridge-broker"]

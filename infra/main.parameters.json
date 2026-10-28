@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": { "value": "${AZURE_ENV_NAME}" },
+    "location": { "value": "${AZURE_LOCATION}" },
+    "githubClientId": { "value": "${GITHUB_CLIENT_ID}" },
+    "githubClientSecret": { "value": "${GITHUB_CLIENT_SECRET}" },
+    "cookieKey": { "value": "${COOKIE_KEY}" },
+    "bootstrapAdminIds": { "value": "${BOOTSTRAP_ADMIN_IDS}" },
+    "allowedLocations": { "value": "${ALLOWED_LOCATIONS}" },
+    "brokerExists": { "value": "${SERVICE_BROKER_RESOURCE_EXISTS}" }
+  }
+}

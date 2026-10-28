@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: azbridge-broker
+infra:
+  provider: bicep
+  path: infra
+services:
+  broker:
+    project: .
+    language: docker
+    host: containerapp
+    apiVersion: 2025-02-02-preview
+    resourceName: ${AZURE_CONTAINER_APP_NAME}
+    module: broker
+    docker:
+      path: Dockerfile.broker
+      context: .
+      platform: linux/amd64
