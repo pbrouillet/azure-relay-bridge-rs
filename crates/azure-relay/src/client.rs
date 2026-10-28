@@ -11,7 +11,7 @@ use url::Url;
 
 use crate::connection_string::RelayConnectionStringBuilder;
 use crate::error::{RelayError, Result};
-use crate::protocol::{actions, query_params, HC_PATH_PREFIX};
+use crate::protocol::{HC_PATH_PREFIX, actions, query_params};
 use crate::stream::HybridConnectionStream;
 use crate::token_provider::{
     SecurityToken, SharedAccessSignatureToken, SharedAccessSignatureTokenProvider, TokenProvider,
@@ -87,41 +87,40 @@ impl HybridConnectionClient {
         let builder = RelayConnectionStringBuilder::from_connection_string(connection_string)?;
         builder.validate()?;
 
-        let endpoint = builder.endpoint().ok_or_else(|| {
-            RelayError::InvalidConnectionString("missing Endpoint".into())
-        })?;
-        let entity_path = builder.entity_path().ok_or_else(|| {
-            RelayError::InvalidConnectionString("missing EntityPath".into())
-        })?;
+        let endpoint = builder
+            .endpoint()
+            .ok_or_else(|| RelayError::InvalidConnectionString("missing Endpoint".into()))?;
+        let entity_path = builder
+            .entity_path()
+            .ok_or_else(|| RelayError::InvalidConnectionString("missing EntityPath".into()))?;
 
         let address = build_relay_address(endpoint, entity_path)?;
 
         #[cfg(feature = "azure-identity")]
         let mut is_aad = false;
 
-        let token_provider: Option<Arc<dyn DynTokenProvider>> =
-            if let (Some(key_name), Some(key)) = (
-                builder.shared_access_key_name(),
-                builder.shared_access_key(),
-            ) {
-                Some(Arc::new(SharedAccessSignatureTokenProvider::new(
-                    key_name, key,
-                )?))
-            } else if let Some(sig) = builder.shared_access_signature() {
-                Some(Arc::new(SharedAccessSignatureToken::new(sig)?))
-            } else {
-                // No SAS credentials — fall back to AAD if the feature is enabled.
-                #[cfg(feature = "azure-identity")]
-                {
-                    let provider = crate::aad_token_provider::AadTokenProvider::new()?;
-                    is_aad = true;
-                    Some(Arc::new(provider))
-                }
-                #[cfg(not(feature = "azure-identity"))]
-                {
-                    None
-                }
-            };
+        let token_provider: Option<Arc<dyn DynTokenProvider>> = if let (Some(key_name), Some(key)) = (
+            builder.shared_access_key_name(),
+            builder.shared_access_key(),
+        ) {
+            Some(Arc::new(SharedAccessSignatureTokenProvider::new(
+                key_name, key,
+            )?))
+        } else if let Some(sig) = builder.shared_access_signature() {
+            Some(Arc::new(SharedAccessSignatureToken::new(sig)?))
+        } else {
+            // No SAS credentials — fall back to AAD if the feature is enabled.
+            #[cfg(feature = "azure-identity")]
+            {
+                let provider = crate::aad_token_provider::AadTokenProvider::new()?;
+                is_aad = true;
+                Some(Arc::new(provider))
+            }
+            #[cfg(not(feature = "azure-identity"))]
+            {
+                None
+            }
+        };
 
         let operation_timeout = builder
             .operation_timeout()
@@ -201,7 +200,7 @@ impl HybridConnectionClient {
         &self,
         request_headers: &HashMap<String, String>,
     ) -> Result<HybridConnectionStream> {
-        use crate::protocol::{headers, normalize_audience, RELAY_USER_AGENT_VALUE};
+        use crate::protocol::{RELAY_USER_AGENT_VALUE, headers, normalize_audience};
 
         let tracking_id = uuid::Uuid::new_v4().to_string();
         debug!(tracking_id = %tracking_id, "creating hybrid connection");
@@ -238,9 +237,10 @@ impl HybridConnectionClient {
 
             request.headers_mut().insert(
                 header_name,
-                token.token.parse().map_err(|_| {
-                    RelayError::communication("invalid token value for header")
-                })?,
+                token
+                    .token
+                    .parse()
+                    .map_err(|_| RelayError::communication("invalid token value for header"))?,
             );
         }
 
@@ -253,19 +253,23 @@ impl HybridConnectionClient {
         // Add custom request headers.
         for (key, value) in request_headers {
             let header_name: tokio_tungstenite::tungstenite::http::HeaderName =
-                key.parse().map_err(|e: tokio_tungstenite::tungstenite::http::header::InvalidHeaderName| {
-                    RelayError::InvalidArgument {
-                        name: "request_headers".into(),
-                        message: format!("invalid header name '{key}': {e}"),
-                    }
-                })?;
+                key.parse().map_err(
+                    |e: tokio_tungstenite::tungstenite::http::header::InvalidHeaderName| {
+                        RelayError::InvalidArgument {
+                            name: "request_headers".into(),
+                            message: format!("invalid header name '{key}': {e}"),
+                        }
+                    },
+                )?;
             let header_value: tokio_tungstenite::tungstenite::http::HeaderValue =
-                value.parse().map_err(|e: tokio_tungstenite::tungstenite::http::header::InvalidHeaderValue| {
-                    RelayError::InvalidArgument {
-                        name: "request_headers".into(),
-                        message: format!("invalid header value for '{key}': {e}"),
-                    }
-                })?;
+                value.parse().map_err(
+                    |e: tokio_tungstenite::tungstenite::http::header::InvalidHeaderValue| {
+                        RelayError::InvalidArgument {
+                            name: "request_headers".into(),
+                            message: format!("invalid header value for '{key}': {e}"),
+                        }
+                    },
+                )?;
             request.headers_mut().insert(header_name, header_value);
         }
 
@@ -288,13 +292,22 @@ impl HybridConnectionClient {
 // -- Helpers -----------------------------------------------------------------
 
 /// Converts an `sb://` endpoint and entity path to a `wss://…/$hc/{entity_path}` URL.
-fn build_relay_address(endpoint: &Url, entity_path: &str) -> Result<Url> {
+///
+/// Uses the endpoint host and explicit port, defaulting to port 443. The endpoint
+/// path, query, and fragment are ignored; the entity path is appended as supplied.
+///
+/// # Errors
+///
+/// Returns [`RelayError::InvalidConnectionString`] if the endpoint has no host or
+/// the resulting WebSocket URL cannot be parsed.
+pub fn build_relay_address(endpoint: &Url, entity_path: &str) -> Result<Url> {
     let host = endpoint
         .host_str()
         .ok_or_else(|| RelayError::InvalidConnectionString("missing host".into()))?;
     let port = endpoint.port().unwrap_or(443);
     Url::parse(&format!(
-        "wss://{}:{}/{}{}", host, port, HC_PATH_PREFIX, entity_path
+        "wss://{}:{}/{}{}",
+        host, port, HC_PATH_PREFIX, entity_path
     ))
     .map_err(|e| RelayError::InvalidConnectionString(e.to_string()))
 }
@@ -359,7 +372,10 @@ mod tests {
     fn normalize_audience_no_hc_prefix() {
         use crate::protocol::normalize_audience;
         let url = Url::parse("wss://host.example.com/some/path").unwrap();
-        assert_eq!(normalize_audience(&url), "http://host.example.com/some/path/");
+        assert_eq!(
+            normalize_audience(&url),
+            "http://host.example.com/some/path/"
+        );
     }
 
     #[test]

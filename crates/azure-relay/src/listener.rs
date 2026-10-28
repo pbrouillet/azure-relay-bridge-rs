@@ -1,16 +1,17 @@
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use futures_util::{SinkExt, StreamExt};
 use tokio::net::TcpStream;
-use tokio::sync::{mpsc, Notify, RwLock};
+use tokio::sync::{Notify, RwLock, mpsc};
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use url::Url;
 
+use crate::client::build_relay_address;
 use crate::connection_string::RelayConnectionStringBuilder;
 use crate::error::{RelayError, Result};
 use crate::http::RequestHandler;
@@ -127,45 +128,41 @@ impl HybridConnectionListener {
     pub fn from_connection_string(connection_string: &str) -> Result<Self> {
         let builder = RelayConnectionStringBuilder::from_connection_string(connection_string)?;
 
-        let endpoint = builder.endpoint().ok_or_else(|| {
-            RelayError::InvalidConnectionString("missing Endpoint".to_string())
-        })?;
-        let entity_path = builder.entity_path().ok_or_else(|| {
-            RelayError::InvalidConnectionString("missing EntityPath".to_string())
-        })?;
+        let endpoint = builder
+            .endpoint()
+            .ok_or_else(|| RelayError::InvalidConnectionString("missing Endpoint".to_string()))?;
+        let entity_path = builder
+            .entity_path()
+            .ok_or_else(|| RelayError::InvalidConnectionString("missing EntityPath".to_string()))?;
 
-        let host = endpoint.host_str().ok_or_else(|| {
-            RelayError::InvalidConnectionString("Endpoint has no host".to_string())
-        })?;
-
-        let address = Url::parse(&format!("wss://{}/{}{}", host, protocol::HC_PATH_PREFIX, entity_path))
-            .map_err(|e| RelayError::InvalidConnectionString(format!("failed to build relay URL: {e}")))?;
+        let address = build_relay_address(endpoint, entity_path)?;
 
         #[cfg(feature = "azure-identity")]
         let mut is_aad = false;
 
         // Build a token provider from connection string credentials.
-        let token_provider: Option<Arc<dyn DynTokenProvider>> =
-            if let (Some(key_name), Some(key)) = (
-                builder.shared_access_key_name(),
-                builder.shared_access_key(),
-            ) {
-                Some(Arc::new(SharedAccessSignatureTokenProvider::new(key_name, key)?))
-            } else if let Some(sig) = builder.shared_access_signature() {
-                Some(Arc::new(SharedAccessSignatureToken::new(sig)?))
-            } else {
-                // No SAS credentials — fall back to AAD if the feature is enabled.
-                #[cfg(feature = "azure-identity")]
-                {
-                    let provider = crate::aad_token_provider::AadTokenProvider::new()?;
-                    is_aad = true;
-                    Some(Arc::new(provider))
-                }
-                #[cfg(not(feature = "azure-identity"))]
-                {
-                    None
-                }
-            };
+        let token_provider: Option<Arc<dyn DynTokenProvider>> = if let (Some(key_name), Some(key)) = (
+            builder.shared_access_key_name(),
+            builder.shared_access_key(),
+        ) {
+            Some(Arc::new(SharedAccessSignatureTokenProvider::new(
+                key_name, key,
+            )?))
+        } else if let Some(sig) = builder.shared_access_signature() {
+            Some(Arc::new(SharedAccessSignatureToken::new(sig)?))
+        } else {
+            // No SAS credentials — fall back to AAD if the feature is enabled.
+            #[cfg(feature = "azure-identity")]
+            {
+                let provider = crate::aad_token_provider::AadTokenProvider::new()?;
+                is_aad = true;
+                Some(Arc::new(provider))
+            }
+            #[cfg(not(feature = "azure-identity"))]
+            {
+                None
+            }
+        };
 
         Ok(Self::new_inner(
             address,
@@ -296,7 +293,12 @@ impl HybridConnectionListener {
 
     /// Returns a human-readable description of the last error, if any.
     pub async fn last_error(&self) -> Option<String> {
-        self.inner.last_error.read().await.as_ref().map(|e| e.to_string())
+        self.inner
+            .last_error
+            .read()
+            .await
+            .as_ref()
+            .map(|e| e.to_string())
     }
 
     // ------------------------------------------------------------------
@@ -364,7 +366,7 @@ impl HybridConnectionListener {
     async fn connect_control_channel(
         inner: &Arc<ListenerInner>,
     ) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
-        use crate::protocol::{headers, normalize_audience, RELAY_USER_AGENT_VALUE};
+        use crate::protocol::{RELAY_USER_AGENT_VALUE, headers, normalize_audience};
         use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 
         let tracking_id = uuid::Uuid::new_v4().to_string();
@@ -384,7 +386,14 @@ impl HybridConnectionListener {
             "ws" | "http" => "ws",
             _ => "wss",
         };
-        let url = protocol::build_uri_scheme(scheme, host, port, path, protocol::actions::LISTEN, &tracking_id);
+        let url = protocol::build_uri_scheme(
+            scheme,
+            host,
+            port,
+            path,
+            protocol::actions::LISTEN,
+            &tracking_id,
+        );
 
         // Build the HTTP upgrade request with auth header.
         let mut request = url
@@ -396,7 +405,9 @@ impl HybridConnectionListener {
         // SAS tokens use the `ServiceBusAuthorization` header.
         if let Some(provider) = &inner.token_provider {
             let audience = normalize_audience(&inner.address);
-            let token = provider.get_token_boxed(&audience, Duration::from_secs(3600)).await?;
+            let token = provider
+                .get_token_boxed(&audience, Duration::from_secs(3600))
+                .await?;
 
             #[cfg(feature = "azure-identity")]
             let header_name = if inner.is_aad {
@@ -409,9 +420,10 @@ impl HybridConnectionListener {
 
             request.headers_mut().insert(
                 header_name,
-                token.token.parse().map_err(|_| {
-                    RelayError::communication("invalid token value for header")
-                })?,
+                token
+                    .token
+                    .parse()
+                    .map_err(|_| RelayError::communication("invalid token value for header"))?,
             );
         }
 
@@ -492,7 +504,9 @@ impl HybridConnectionListener {
 
     async fn read_control_messages(
         inner: &Arc<ListenerInner>,
-        ws_stream: &mut futures_util::stream::SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>,
+        ws_stream: &mut futures_util::stream::SplitStream<
+            WebSocketStream<MaybeTlsStream<TcpStream>>,
+        >,
         ws_tx: &mpsc::Sender<Message>,
     ) -> Result<()> {
         let mut ping_interval = tokio::time::interval(inner.keep_alive_interval);
@@ -641,7 +655,10 @@ impl HybridConnectionListener {
 
         loop {
             let audience = protocol::normalize_audience(&inner.address);
-            match provider.get_token_boxed(&audience, Duration::from_secs(3600)).await {
+            match provider
+                .get_token_boxed(&audience, Duration::from_secs(3600))
+                .await
+            {
                 Ok(token) => {
                     let cmd = ListenerResponse::RenewToken(RenewTokenCommand {
                         token: token.token.clone(),
@@ -722,6 +739,19 @@ mod tests {
             "wss://ns.servicebus.windows.net/$hc/hc1"
         );
         assert!(listener.inner.token_provider.is_some());
+    }
+
+    #[test]
+    fn build_relay_address_matches_listener_connection_string_constructor() {
+        let connection_string = "Endpoint=sb://ns.servicebus.windows.net:8443/;EntityPath=group/myconn;\
+                                 SharedAccessKeyName=key;SharedAccessKey=dGVzdA==";
+        let expected = build_relay_address(
+            &Url::parse("sb://ns.servicebus.windows.net:8443/").unwrap(),
+            "group/myconn",
+        )
+        .unwrap();
+        let listener = HybridConnectionListener::from_connection_string(connection_string).unwrap();
+        assert_eq!(listener.inner.address, expected);
     }
 
     #[test]

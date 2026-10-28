@@ -14,7 +14,7 @@ pub mod token_provider;
 
 #[cfg(feature = "azure-identity")]
 pub use aad_token_provider::{AadTokenProvider, TokenKind};
-pub use client::HybridConnectionClient;
+pub use client::{HybridConnectionClient, build_relay_address};
 pub use connection_string::{AuthenticationType, RelayConnectionStringBuilder};
 pub use error::{RelayError, Result};
 pub use http::{
