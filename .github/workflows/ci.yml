@@ -13,7 +13,77 @@ env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
 
+permissions:
+  contents: read
+
 jobs:
+  web:
+    name: Web lint, types, tests & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm exec -- tsc --noEmit
+      - name: Vitest
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: Install browser for editor integration tests
+        run: npm exec -- playwright install --with-deps chromium
+      - name: Browser editor integration tests
+        run: npm run test:browser
+
+  generated-types:
+    name: Broker API TypeScript drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+      - name: Regenerate browser DTOs
+        run: cargo run --locked -p azbridge-broker-api --example generate_types
+      - name: Require committed bindings to match Rust
+        run: |
+          git ls-files --error-unmatch web/src/api/generated/index.ts
+          git diff --exit-code -- web/src/api/generated/index.ts
+
+  infrastructure:
+    name: Offline Bicep & infrastructure contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Bicep compiler
+        run: az bicep install --version v0.42.1
+      - name: Compile provisioning and revision templates
+        run: |
+          az bicep build --file infra/main.bicep --outfile infra/main.json
+          az bicep build --file infra/broker.bicep --outfile infra/broker.json
+      - name: Check offline deployment contracts
+        run: python infra/tests/test_contract.py infra/main.json infra/broker.json
+
+  broker-image:
+    name: Broker Docker build (no push)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Linux broker and bundled SPA
+        run: docker build --platform linux/amd64 --file Dockerfile.broker --tag azbridge-broker:ci .
+
   check:
     name: Check & Lint
     runs-on: ubuntu-latest
