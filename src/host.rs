@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Notify;
@@ -190,6 +190,55 @@ impl Host {
         anyhow::bail!("No connection string or endpoint configured")
     }
 
+    /// Detect listeners that would collide or break browser origins before any bind.
+    async fn preflight_local_bindings(
+        &self,
+        gateway_ports: bool,
+        exit_on_forward_failure: bool,
+    ) -> anyhow::Result<()> {
+        let mut entries = Vec::new();
+        for lf in &self.config.local_forward {
+            let mut lf = lf.clone();
+            lf.normalize();
+            for binding in &lf.bindings {
+                if binding.bind_local_socket.is_some() || binding.bind_port == 0 {
+                    continue;
+                }
+                let host = binding.bind_address.clone().unwrap_or_else(|| {
+                    if gateway_ports {
+                        "0.0.0.0"
+                    } else {
+                        "127.0.0.1"
+                    }
+                    .into()
+                });
+                // Unresolvable names keep their existing per-binding failure handling.
+                if let Ok(addr) =
+                    resolve_address(&host, binding.bind_port.unsigned_abs() as u16).await
+                {
+                    entries.push(LocalBinding {
+                        host,
+                        udp: binding.bind_port < 0,
+                        addr,
+                    });
+                }
+            }
+        }
+        let report = local_bind_report(&entries);
+        for warning in &report.warnings {
+            warn!("{warning}");
+        }
+        if let Some(error) = report.errors.first() {
+            if exit_on_forward_failure {
+                anyhow::bail!("{error}");
+            }
+            for error in &report.errors {
+                warn!("{error}");
+            }
+        }
+        Ok(())
+    }
+
     /// Start all configured forwarders.
     ///
     /// This sets up:
@@ -215,6 +264,8 @@ impl Host {
         let max_attempts = self.config.connection_attempts.unwrap_or(1) as usize;
 
         // --- Local forward bridges ---
+        self.preflight_local_bindings(gateway_ports, exit_on_forward_failure)
+            .await?;
         for lf in &self.config.local_forward {
             let cs = match self.credentials(
                 &lf.relay_name,
@@ -416,7 +467,11 @@ impl Host {
                     };
                     let shutdown = self.shutdown.clone();
                     let bound = if self.broker.is_some() {
-                        Some(Arc::new(tokio::net::UdpSocket::bind(bind_addr).await?))
+                        Some(Arc::new(
+                            tokio::net::UdpSocket::bind(bind_addr)
+                                .await
+                                .map_err(|e| bind_error(e, bind_host, bind_addr))?,
+                        ))
                     } else {
                         None
                     };
@@ -474,7 +529,11 @@ impl Host {
                     };
                     let shutdown = self.shutdown.clone();
                     let bound = if self.broker.is_some() {
-                        Some(tokio::net::TcpListener::bind(bind_addr).await?)
+                        Some(
+                            tokio::net::TcpListener::bind(bind_addr)
+                                .await
+                                .map_err(|e| bind_error(e, bind_host, bind_addr))?,
+                        )
                     } else {
                         None
                     };
@@ -742,6 +801,86 @@ fn is_loopback(endpoint: &Url) -> bool {
     })
 }
 
+pub(crate) struct LocalBinding {
+    pub host: String,
+    pub udp: bool,
+    pub addr: std::net::SocketAddr,
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub(crate) struct LocalBindReport {
+    pub errors: Vec<String>,
+    pub warnings: Vec<String>,
+}
+
+const HOSTS_HINT: &str =
+    "Run `azbridge hosts apply` to give each hostname its own loopback address.";
+
+/// Duplicate listeners are errors; hostnames sharing one IP on different ports are
+/// warned about because browser origins then differ from production.
+pub(crate) fn local_bind_report(entries: &[LocalBinding]) -> LocalBindReport {
+    let mut report = LocalBindReport::default();
+    let mut seen: HashMap<(bool, std::net::SocketAddr), &str> = HashMap::new();
+    for entry in entries {
+        if let Some(first) = seen.insert((entry.udp, entry.addr), &entry.host) {
+            report.errors.push(format!(
+                "Local listeners '{first}' and '{}' both resolve to {} {}. {HOSTS_HINT}",
+                entry.host,
+                if entry.udp { "UDP" } else { "TCP" },
+                entry.addr
+            ));
+        }
+    }
+    let mut by_ip: HashMap<std::net::IpAddr, BTreeSet<&str>> = HashMap::new();
+    for entry in entries.iter().filter(|entry| {
+        crate::hosts::is_aliasable_host(&entry.host) && entry.addr.ip().is_loopback()
+    }) {
+        by_ip
+            .entry(entry.addr.ip())
+            .or_default()
+            .insert(entry.host.as_str());
+    }
+    let mut shared: Vec<_> = by_ip
+        .into_iter()
+        .filter(|(_, hosts)| hosts.len() > 1)
+        .collect();
+    shared.sort_by_key(|(ip, _)| *ip);
+    for (ip, hosts) in shared {
+        report.warnings.push(format!(
+            "{} hostnames share loopback address {ip}, so their listeners need different ports than the services they front. Browser redirects and sign-in to https://<host>/ will leave the tunnel. {HOSTS_HINT}",
+            hosts.len()
+        ));
+    }
+    report
+}
+
+/// Add actionable hints to local listener bind failures.
+pub(crate) fn bind_error(
+    error: std::io::Error,
+    host: &str,
+    addr: std::net::SocketAddr,
+) -> anyhow::Error {
+    let hint = match error.kind() {
+        std::io::ErrorKind::AddrInUse if cfg!(windows) => {
+            " Another process is listening there; check `netstat -ano | findstr :<port>` and http.sys reservations with `netsh http show iplisten`."
+        }
+        std::io::ErrorKind::AddrInUse => {
+            " Another process is listening there; check with `ss -ltnp` or `lsof -i`."
+        }
+        std::io::ErrorKind::AddrNotAvailable if cfg!(target_os = "macos") => {
+            " macOS needs a loopback alias for this address; run `sudo azbridge hosts apply`."
+        }
+        std::io::ErrorKind::AddrNotAvailable => {
+            " The address is not assigned to this machine; check the hosts file mapping."
+        }
+        std::io::ErrorKind::PermissionDenied if cfg!(unix) && addr.port() < 1024 => {
+            " Ports below 1024 need privileges: grant `setcap cap_net_bind_service=+ep` to azbridge or lower `net.ipv4.ip_unprivileged_port_start`."
+        }
+        _ => "",
+    };
+    anyhow::anyhow!("Failed to bind local listener {host} ({addr}): {error}.{hint}")
+}
+
 /// Resolve a host:port string to a SocketAddr, supporting both literal IPs and DNS names.
 async fn resolve_address(host: &str, port: u16) -> anyhow::Result<std::net::SocketAddr> {
     let addr_str = format!("{}:{}", host, port);
@@ -782,6 +921,84 @@ fn is_address_family_allowed(addr: std::net::SocketAddr, family: Option<&str>) -
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn binding(host: &str, udp: bool, addr: &str) -> LocalBinding {
+        LocalBinding {
+            host: host.into(),
+            udp,
+            addr: addr.parse().unwrap(),
+        }
+    }
+
+    #[test]
+    fn local_bind_report_rejects_duplicates_and_warns_on_shared_loopback() {
+        let report = local_bind_report(&[
+            binding("a.example.test", false, "127.0.0.1:44301"),
+            binding("b.example.test", false, "127.0.0.1:44302"),
+            binding("c.example.test", false, "127.0.0.1:44301"),
+            // TCP and UDP on the same address/port do not collide.
+            binding("a.example.test", true, "127.0.0.1:44301"),
+            binding("127.0.0.1", false, "127.0.0.1:9000"),
+            binding("d.example.test", false, "127.77.1.2:443"),
+            binding("e.example.test", false, "127.77.1.3:443"),
+        ]);
+        assert_eq!(report.errors.len(), 1);
+        assert!(
+            report.errors[0].contains(
+                "'a.example.test' and 'c.example.test' both resolve to TCP 127.0.0.1:44301"
+            )
+        );
+        assert!(report.errors[0].contains("azbridge hosts apply"));
+        assert_eq!(report.warnings.len(), 1);
+        assert!(report.warnings[0].starts_with("3 hostnames share loopback address 127.0.0.1"));
+    }
+
+    #[test]
+    fn local_bind_report_accepts_canonical_per_host_aliases() {
+        assert_eq!(
+            local_bind_report(&[
+                binding("a.example.test", false, "127.77.1.2:443"),
+                binding("b.example.test", false, "127.77.1.3:443"),
+                binding("lan.example.test", false, "10.0.0.5:8080"),
+                binding("lan2.example.test", false, "10.0.0.5:8081"),
+            ]),
+            LocalBindReport::default()
+        );
+    }
+
+    #[test]
+    fn bind_errors_name_the_listener_and_give_hints() {
+        let addr: std::net::SocketAddr = "127.77.1.2:443".parse().unwrap();
+        let in_use =
+            bind_error(std::io::ErrorKind::AddrInUse.into(), "a.example.test", addr).to_string();
+        assert!(
+            in_use.starts_with("Failed to bind local listener a.example.test (127.77.1.2:443)")
+        );
+        assert!(in_use.contains("Another process is listening there"));
+        let missing = bind_error(
+            std::io::ErrorKind::AddrNotAvailable.into(),
+            "a.example.test",
+            addr,
+        )
+        .to_string();
+        assert!(missing.contains("hosts"));
+        let other =
+            bind_error(std::io::ErrorKind::Other.into(), "a.example.test", addr).to_string();
+        assert!(other.ends_with('.'));
+    }
+
+    #[tokio::test]
+    async fn start_fails_fast_on_duplicate_local_listeners() {
+        let config: Config = serde_yaml::from_str(
+            "AzureRelayConnectionString: Endpoint=sb://ns.example.test/;SharedAccessKeyName=n;SharedAccessKey=k\nLocalForward:\n- RelayName: r\n  BindAddress: 127.0.0.1\n  BindPort: 45999\n  PortName: a\n- RelayName: r\n  BindAddress: 127.0.0.1\n  BindPort: 45999\n  PortName: b\n",
+        )
+        .unwrap();
+        let error = Host::new(config).start().await.unwrap_err().to_string();
+        assert!(
+            error.contains("both resolve to TCP 127.0.0.1:45999"),
+            "{error}"
+        );
+    }
 
     #[test]
     fn host_new_with_default_config() {

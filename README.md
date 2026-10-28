@@ -165,6 +165,49 @@ AddressFamily: any           # any, inet (IPv4 only), inet6 (IPv6 only)
 GatewayPorts: false          # Bind to 0.0.0.0 instead of 127.0.0.1
 ```
 
+### Browser sign-in through tunnels (canonical origins)
+
+Web applications redirect to their own address, for example `https://app.example.com/`
+on port 443, and identity providers only send users back to the registered redirect
+URI. A listener such as `app.example.com:44305` therefore breaks sign-in: the redirect
+leaves the tunnel. azbridge does not rewrite traffic, because the application's TLS
+passes through unchanged and the identity provider's redirect never reaches azbridge.
+
+Give every browser-facing hostname its own loopback address and listen on the
+destination's port instead:
+
+```yaml
+LocalForward:
+  - RelayName: apps
+    BindAddress: app.example.com   # mapped to its own 127.77.x.y address
+    BindPort: 443                  # same port as the destination
+    PortName: app
+```
+
+`azbridge hosts` maintains the hosts-file entries. Addresses are deterministic in
+`127.77.0.0/16`, are never `127.0.0.1`, and match the admin console's **Hosts
+entries** export:
+
+```sh
+azbridge hosts print -f client.yml              # show the block
+azbridge hosts apply -f client.yml --dry-run    # preview changes
+azbridge hosts apply -f client.yml              # elevated terminal (Windows) or sudo
+azbridge hosts apply -f client.yml --replace-existing  # also comment out older entries for these names
+azbridge hosts remove -f client.yml             # remove the block and restore those entries
+```
+
+Without `-f`, the enrolled managed profile is used (`--machine` for the machine
+scope). The block is tagged with the config file name or `--tag`, a backup is written
+to `hosts.azbridge.bak` before the first change, and the DNS cache is flushed. Without
+elevation, the command explains how to re-run it and prints the block. On macOS, it
+also adds the `lo0` aliases, which do not survive a reboot. On Linux, ports below 1024
+need `setcap cap_net_bind_service=+ep` on the binary or a lower
+`net.ipv4.ip_unprivileged_port_start`.
+
+At startup, azbridge refuses two listeners that resolve to the same address and port.
+It warns when hostnames share a loopback address on different ports, and bind errors
+explain likely causes: port in use, missing alias, or a privileged port.
+
 ## Authentication
 
 ### Shared Access Signature (SAS)

@@ -75,7 +75,9 @@ impl TcpLocalForwardBridge {
         client: Arc<HybridConnectionClient>,
         shutdown: Arc<Notify>,
     ) -> anyhow::Result<()> {
-        let listener = TcpListener::bind(self.bind_addr).await?;
+        let listener = TcpListener::bind(self.bind_addr)
+            .await
+            .map_err(|e| crate::host::bind_error(e, "TCP", self.bind_addr))?;
         self.run_bound(client, shutdown, listener).await
     }
 

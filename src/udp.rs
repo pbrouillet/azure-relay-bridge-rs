@@ -88,7 +88,11 @@ impl UdpLocalForwardBridge {
         client: Arc<HybridConnectionClient>,
         shutdown: Arc<Notify>,
     ) -> anyhow::Result<()> {
-        let socket = Arc::new(UdpSocket::bind(self.bind_addr).await?);
+        let socket = Arc::new(
+            UdpSocket::bind(self.bind_addr)
+                .await
+                .map_err(|e| crate::host::bind_error(e, "UDP", self.bind_addr))?,
+        );
         self.run_bound(client, shutdown, socket).await
     }
 
