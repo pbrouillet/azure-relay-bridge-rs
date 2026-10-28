@@ -6,6 +6,7 @@ pub mod broker;
 pub mod config;
 pub mod config_loader;
 pub mod host;
+pub mod hosts;
 pub mod http_forward;
 pub mod http_remote_forwarder;
 pub mod preamble;

@@ -439,6 +439,7 @@ pub fn validate_managed_cli(cli: &Cli) -> anyhow::Result<()> {
 
 pub async fn handle_command(command: &ManagedCommand) -> anyhow::Result<()> {
     match command {
+        ManagedCommand::Hosts { action } => crate::hosts::run(action).await,
         ManagedCommand::Login {
             broker,
             workspace,

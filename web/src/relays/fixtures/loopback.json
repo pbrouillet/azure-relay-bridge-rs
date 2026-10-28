@@ -1,0 +1,41 @@
+{
+  "hosts": [
+    "App.Example.test.",
+    "svc-01.example.test",
+    "svc-02.example.test",
+    "svc-108.example.test",
+    "svc-311.example.test",
+    "127.0.0.1",
+    "localhost",
+    "",
+    "a.b"
+  ],
+  "collision": [
+    "svc-108.example.test",
+    "svc-311.example.test"
+  ],
+  "expected": {
+    "a.b": "127.77.22.37",
+    "app.example.test": "127.77.170.217",
+    "svc-01.example.test": "127.77.21.250",
+    "svc-02.example.test": "127.77.97.113",
+    "svc-108.example.test": "127.77.200.236",
+    "svc-311.example.test": "127.77.200.237"
+  },
+  "existing": {
+    "svc-01.example.test": "127.77.9.9"
+  },
+  "expectedWithExisting": {
+    "svc-01.example.test": "127.77.9.9",
+    "a.b": "127.77.22.37",
+    "app.example.test": "127.77.170.217",
+    "svc-02.example.test": "127.77.97.113",
+    "svc-108.example.test": "127.77.200.236",
+    "svc-311.example.test": "127.77.200.237"
+  },
+  "fnv": {
+    "": 2166136261,
+    "a": 3826002220,
+    "foobar": 3214735720
+  }
+}

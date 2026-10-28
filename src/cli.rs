@@ -123,6 +123,65 @@ pub enum ManagedCommand {
         #[arg(long)]
         machine: bool,
     },
+    /// Give tunnelled hostnames their own loopback addresses so listeners can use
+    /// the destination's canonical port (browser redirects and sign-in keep working).
+    Hosts {
+        #[command(subcommand)]
+        action: HostsAction,
+    },
+}
+
+/// Options shared by every `azbridge hosts` action.
+#[derive(clap::Args, Debug, Clone)]
+pub struct HostsArgs {
+    /// Standalone configuration file (defaults to the enrolled profile or the default config layers).
+    #[arg(short = 'f', long = "config-file")]
+    pub config_file: Option<PathBuf>,
+    /// Name of the managed hosts-file block (defaults to the config file name, or "default").
+    #[arg(long)]
+    pub tag: Option<String>,
+    /// Hosts file to edit (defaults to the operating system hosts file).
+    #[arg(long = "hosts-file")]
+    pub hosts_file: Option<PathBuf>,
+    /// Use the machine-wide gateway enrollment.
+    #[arg(long)]
+    pub machine: bool,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum HostsAction {
+    /// Print the hosts-file block for the configured listener hostnames.
+    Print {
+        #[command(flatten)]
+        args: HostsArgs,
+    },
+    /// Add or update the block in the hosts file (requires an elevated shell or sudo).
+    Apply {
+        #[command(flatten)]
+        args: HostsArgs,
+        /// Show the changes without writing them.
+        #[arg(long)]
+        dry_run: bool,
+        /// Comment out other entries for the same hostnames (restored by `remove`).
+        #[arg(long)]
+        replace_existing: bool,
+    },
+    /// Remove the block and restore entries it disabled.
+    Remove {
+        #[command(flatten)]
+        args: HostsArgs,
+        /// Show the changes without writing them.
+        #[arg(long)]
+        dry_run: bool,
+    },
+}
+
+impl HostsAction {
+    pub fn args(&self) -> &HostsArgs {
+        match self {
+            Self::Print { args } | Self::Apply { args, .. } | Self::Remove { args, .. } => args,
+        }
+    }
 }
 
 #[cfg(test)]

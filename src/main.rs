@@ -7,6 +7,7 @@ mod cli;
 mod config;
 mod config_loader;
 mod host;
+mod hosts;
 mod http_forward;
 mod http_remote_forwarder;
 mod logging;
