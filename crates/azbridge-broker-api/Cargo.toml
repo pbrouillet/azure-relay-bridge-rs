@@ -1,0 +1,13 @@
+[package]
+name = "azbridge-broker-api"
+version = "0.1.0"
+edition = "2024"
+description = "Shared JSON and TypeScript contract for the azbridge broker"
+
+[dependencies]
+azbridge-config = { path = "../azbridge-config", features = ["typescript"] }
+serde = { workspace = true }
+ts-rs = "12"
+
+[dev-dependencies]
+serde_json = { workspace = true }
