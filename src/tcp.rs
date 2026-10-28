@@ -76,6 +76,15 @@ impl TcpLocalForwardBridge {
         shutdown: Arc<Notify>,
     ) -> anyhow::Result<()> {
         let listener = TcpListener::bind(self.bind_addr).await?;
+        self.run_bound(client, shutdown, listener).await
+    }
+
+    pub(crate) async fn run_bound(
+        &self,
+        client: Arc<HybridConnectionClient>,
+        shutdown: Arc<Notify>,
+        listener: TcpListener,
+    ) -> anyhow::Result<()> {
         tracing::info!(addr = %self.bind_addr, relay = %self.relay_name, "TCP local forward listening");
 
         loop {
@@ -123,7 +132,11 @@ async fn handle_local_tcp_connection(
     preamble::read_response(&mut relay_stream).await?;
 
     let (a_to_b, b_to_a) = crate::stream_pump::run(tcp_stream, relay_stream).await?;
-    tracing::debug!(sent = a_to_b, received = b_to_a, "TCP local forward connection completed");
+    tracing::debug!(
+        sent = a_to_b,
+        received = b_to_a,
+        "TCP local forward connection completed"
+    );
 
     Ok(())
 }
@@ -219,7 +232,13 @@ mod tests {
     #[test]
     fn tcp_local_forward_bridge_new() {
         let addr: SocketAddr = "127.0.0.1:8080".parse().unwrap();
-        let bridge = TcpLocalForwardBridge::new(addr, "relay1".into(), "8080".into(), false, Duration::from_secs(60));
+        let bridge = TcpLocalForwardBridge::new(
+            addr,
+            "relay1".into(),
+            "8080".into(),
+            false,
+            Duration::from_secs(60),
+        );
         assert_eq!(bridge.bind_addr(), addr);
         assert_eq!(bridge.relay_name(), "relay1");
         assert_eq!(bridge.port_name(), "8080");
@@ -228,7 +247,13 @@ mod tests {
     #[test]
     fn tcp_local_forward_bridge_gateway_ports() {
         let addr: SocketAddr = "0.0.0.0:8080".parse().unwrap();
-        let bridge = TcpLocalForwardBridge::new(addr, "relay1".into(), "8080".into(), true, Duration::from_secs(60));
+        let bridge = TcpLocalForwardBridge::new(
+            addr,
+            "relay1".into(),
+            "8080".into(),
+            true,
+            Duration::from_secs(60),
+        );
         assert!(bridge.gateway_ports);
     }
 

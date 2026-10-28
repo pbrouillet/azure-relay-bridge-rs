@@ -5,10 +5,10 @@ use azure_relay::{HybridConnectionListener, HybridConnectionStream};
 use tokio::sync::Notify;
 use tracing::{debug, error, info, warn};
 
+use crate::http_remote_forwarder::HttpRemoteForwarder;
 use crate::preamble::{self, ConnectionMode};
 #[cfg(unix)]
 use crate::socket::SocketRemoteForwarder;
-use crate::http_remote_forwarder::HttpRemoteForwarder;
 use crate::tcp::TcpRemoteForwarder;
 use crate::udp::UdpRemoteForwarder;
 
@@ -45,16 +45,12 @@ impl RemoteForwardBridge {
     }
 
     /// Run the remote forward bridge accept loop.
-    pub async fn run(self, shutdown: Arc<Notify>) -> anyhow::Result<()> {
+    pub async fn run(mut self, shutdown: Arc<Notify>) -> anyhow::Result<()> {
         // Set HTTP request handler if any HTTP forwarders exist
-        if !self.http_forwarders.is_empty() {
-            let handler = HttpDispatcher {
-                forwarders: Arc::new(self.http_forwarders),
-            };
-            self.listener.set_request_handler(handler);
+        self.configure_http_handler();
+        if !self.listener.is_online() {
+            self.listener.open().await?;
         }
-
-        self.listener.open().await?;
         info!(relay = %self.relay_name, "Remote forward bridge listening on relay");
 
         let forwarders = Arc::new(self.forwarders);
@@ -90,6 +86,44 @@ impl RemoteForwardBridge {
 
         self.listener.close().await?;
         Ok(())
+    }
+
+    fn configure_http_handler(&mut self) {
+        if !self.http_forwarders.is_empty() {
+            let handler = HttpDispatcher {
+                forwarders: Arc::new(std::mem::take(&mut self.http_forwarders)),
+            };
+            self.listener.set_request_handler(handler);
+        }
+    }
+
+    /// Managed startup must observe an established control channel, not just a
+    /// spawned reconnection loop, before reporting its applied revision.
+    pub(crate) async fn ready(&mut self, timeout: std::time::Duration) -> anyhow::Result<()> {
+        self.configure_http_handler();
+        self.listener.open().await?;
+        let result = tokio::time::timeout(timeout, async {
+            loop {
+                if self.listener.status() == azure_relay::ConnectionStatus::Online {
+                    return Ok(());
+                }
+                if self.listener.last_error().await.is_some() {
+                    anyhow::bail!("Managed Relay listener could not establish its control channel");
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            }
+        })
+        .await;
+        match result {
+            Ok(Ok(())) => Ok(()),
+            other => {
+                self.listener.close().await?;
+                match other {
+                    Ok(Err(error)) => Err(error),
+                    _ => anyhow::bail!("Managed Relay listener startup timed out"),
+                }
+            }
+        }
     }
 }
 
@@ -129,9 +163,7 @@ async fn dispatch_connection(
 
     // Mode validation with C#-compatible error codes
     match (forwarder, request.mode) {
-        (RemoteForwarder::Tcp(tcp), ConnectionMode::Stream) => {
-            tcp.handle_connection(stream).await
-        }
+        (RemoteForwarder::Tcp(tcp), ConnectionMode::Stream) => tcp.handle_connection(stream).await,
         #[cfg(unix)]
         (RemoteForwarder::Socket(sock), ConnectionMode::Stream) => {
             sock.handle_connection(stream).await
@@ -277,7 +309,10 @@ mod tests {
             (&forwarder, mode),
             (RemoteForwarder::Tcp(_), ConnectionMode::Datagram)
         );
-        assert!(is_mismatch, "TCP forwarder + datagram mode should be a mismatch");
+        assert!(
+            is_mismatch,
+            "TCP forwarder + datagram mode should be a mismatch"
+        );
     }
 
     #[test]
@@ -291,7 +326,10 @@ mod tests {
             (&forwarder, mode),
             (RemoteForwarder::Udp(_), ConnectionMode::Stream)
         );
-        assert!(is_mismatch, "UDP forwarder + stream mode should be a mismatch");
+        assert!(
+            is_mismatch,
+            "UDP forwarder + stream mode should be a mismatch"
+        );
     }
 
     #[test]

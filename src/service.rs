@@ -47,8 +47,7 @@ pub mod windows {
 
     /// Uninstall the azbridge Windows Service.
     pub fn uninstall_service() -> anyhow::Result<()> {
-        let manager =
-            ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT)?;
+        let manager = ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT)?;
         let service = manager.open_service(
             SERVICE_NAME,
             ServiceAccess::DELETE | ServiceAccess::QUERY_STATUS | ServiceAccess::STOP,
@@ -108,38 +107,28 @@ pub mod windows {
         })?;
 
         let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async {
+        let result = rt.block_on(async {
             // In service mode, parse with no user-supplied args
             let cli = clap::Parser::parse_from(["azbridge", "--svc"]);
-            match crate::config_loader::load_config(&cli) {
-                Ok(config) => {
-                    let host = std::sync::Arc::new(crate::host::Host::new(config));
-                    if let Err(e) = host.start().await {
-                        tracing::error!("Failed to start host: {}", e);
-                        return;
-                    }
-
-                    // Wait for stop signal from SCM
-                    let _ = shutdown_rx.recv();
-                    host.stop().await;
-                }
-                Err(e) => {
-                    tracing::error!("Failed to load config: {}", e);
-                }
-            }
+            let bootstrap = crate::broker::bootstrap(&cli, true).await?;
+            let host = bootstrap.start().await?;
+            // Do not block a Tokio worker while waiting for SCM.
+            let _ = tokio::task::spawn_blocking(move || shutdown_rx.recv()).await;
+            host.stop().await;
+            Ok::<(), anyhow::Error>(())
         });
 
         status_handle.set_service_status(ServiceStatus {
             service_type: ServiceType::OWN_PROCESS,
             current_state: ServiceState::Stopped,
             controls_accepted: ServiceControlAccept::empty(),
-            exit_code: ServiceExitCode::Win32(0),
+            exit_code: ServiceExitCode::Win32(if result.is_err() { 1 } else { 0 }),
             checkpoint: 0,
             wait_hint: Duration::default(),
             process_id: None,
         })?;
 
-        Ok(())
+        result
     }
 
     #[cfg(test)]

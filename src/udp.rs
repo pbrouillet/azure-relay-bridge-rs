@@ -89,6 +89,15 @@ impl UdpLocalForwardBridge {
         shutdown: Arc<Notify>,
     ) -> anyhow::Result<()> {
         let socket = Arc::new(UdpSocket::bind(self.bind_addr).await?);
+        self.run_bound(client, shutdown, socket).await
+    }
+
+    pub(crate) async fn run_bound(
+        &self,
+        client: Arc<HybridConnectionClient>,
+        shutdown: Arc<Notify>,
+        socket: Arc<UdpSocket>,
+    ) -> anyhow::Result<()> {
         tracing::info!(addr = %self.bind_addr, relay = %self.relay_name, "UDP local forward listening");
 
         let routes: Arc<Mutex<HashMap<SocketAddr, UdpRoute>>> =
@@ -180,12 +189,7 @@ async fn create_udp_route(
         let mut writer = relay_write;
         while let Some(data) = rx.recv().await {
             *last_act_send.lock().await = Instant::now();
-            match tokio::time::timeout(
-                UDP_SEND_TIMEOUT,
-                write_datagram(&mut writer, &data),
-            )
-            .await
-            {
+            match tokio::time::timeout(UDP_SEND_TIMEOUT, write_datagram(&mut writer, &data)).await {
                 Ok(Ok(())) => {}
                 Ok(Err(e)) => {
                     tracing::debug!(error = %e, "UDP route send failed");
@@ -240,7 +244,11 @@ pub struct UdpRemoteForwarder {
 }
 
 impl UdpRemoteForwarder {
-    pub fn new(target_addr: SocketAddr, port_name: String, bind_address: Option<SocketAddr>) -> Self {
+    pub fn new(
+        target_addr: SocketAddr,
+        port_name: String,
+        bind_address: Option<SocketAddr>,
+    ) -> Self {
         Self {
             target_addr,
             port_name,
@@ -259,7 +267,8 @@ impl UdpRemoteForwarder {
         preamble::write_response_ok(&mut relay_stream, ConnectionMode::Datagram).await?;
 
         // Bind an ephemeral UDP socket for forwarding
-        let bind_addr = self.bind_address
+        let bind_addr = self
+            .bind_address
             .map(|a| std::net::SocketAddr::new(a.ip(), 0))
             .unwrap_or_else(|| {
                 // Match the target's address family so connect() succeeds.
@@ -407,18 +416,12 @@ mod tests {
         write_datagram(&mut buf, b"third").await.unwrap();
 
         let mut cursor = Cursor::new(&buf);
-        assert_eq!(
-            read_datagram(&mut cursor).await.unwrap().unwrap(),
-            b"first"
-        );
+        assert_eq!(read_datagram(&mut cursor).await.unwrap().unwrap(), b"first");
         assert_eq!(
             read_datagram(&mut cursor).await.unwrap().unwrap(),
             b"second"
         );
-        assert_eq!(
-            read_datagram(&mut cursor).await.unwrap().unwrap(),
-            b"third"
-        );
+        assert_eq!(read_datagram(&mut cursor).await.unwrap().unwrap(), b"third");
         assert!(read_datagram(&mut cursor).await.unwrap().is_none());
     }
 

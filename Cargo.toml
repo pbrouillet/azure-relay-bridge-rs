@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/azure-relay", "."]
+members = ["crates/azure-relay", "crates/azbridge-config", "crates/azbridge-broker-api", "crates/azbridge-broker", "."]
 resolver = "3"
 
 [package]
@@ -16,6 +16,8 @@ name = "azbridge"
 path = "src/main.rs"
 
 [dependencies]
+azbridge-config = { path = "crates/azbridge-config" }
+azbridge-broker-api = { path = "crates/azbridge-broker-api" }
 azure-relay = { path = "crates/azure-relay" }
 tokio = { workspace = true }
 clap = { version = "4", features = ["derive"] }
@@ -27,8 +29,9 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
-reqwest = { version = "0.12", features = ["rustls-tls"], default-features = false }
-regex = "1"
+reqwest = { version = "0.12", features = ["rustls-tls", "json"], default-features = false }
+url = { workspace = true }
+uuid = { workspace = true }
 dirs = "6"
 socket2 = "0.5"
 ratatui = "0.29"
@@ -36,8 +39,12 @@ crossterm = "0.28"
 
 [target.'cfg(windows)'.dependencies]
 windows-service = "0.8"
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security", "Win32_Security_Authorization", "Win32_Storage_FileSystem"] }
 
 [dev-dependencies]
+azbridge-broker = { path = "crates/azbridge-broker" }
+axum = "0.8"
+async-trait = "0.1"
 tempfile = "3"
 serial_test = "3"
 azure-relay = { path = "crates/azure-relay", features = ["test-utils"] }

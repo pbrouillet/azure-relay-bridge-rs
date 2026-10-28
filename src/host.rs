@@ -7,11 +7,26 @@ use tracing::{error, info, warn};
 
 use azure_relay::{HybridConnectionClient, HybridConnectionListener};
 
+use crate::broker::{BrokerClient, BrokerTokenProvider};
 use crate::config::{Config, LocalForwardBinding, RemoteForwardBinding};
+use azbridge_broker_api::RelayRight;
+use url::Url;
+
+#[derive(Clone)]
+enum RelayCredentials {
+    Local(String),
+    Broker {
+        address: Url,
+        provider: Arc<BrokerTokenProvider>,
+    },
+}
 
 /// The top-level bridge host, managing local and remote forwarding.
 pub struct Host {
     config: Config,
+    broker: Option<Arc<BrokerClient>>,
+    broker_providers: std::sync::Mutex<HashMap<(String, RelayRight), Arc<BrokerTokenProvider>>>,
+    managed_listeners: tokio::sync::Mutex<Vec<HybridConnectionListener>>,
     shutdown: Arc<Notify>,
     handles: tokio::sync::Mutex<Vec<JoinHandle<()>>>,
 }
@@ -20,8 +35,118 @@ impl Host {
     pub fn new(config: Config) -> Self {
         Self {
             config,
+            broker: None,
+            broker_providers: std::sync::Mutex::new(HashMap::new()),
+            managed_listeners: tokio::sync::Mutex::new(Vec::new()),
             shutdown: Arc::new(Notify::new()),
             handles: tokio::sync::Mutex::new(Vec::new()),
+        }
+    }
+
+    /// Use only scoped broker tokens; never fall back to namespace credentials.
+    pub fn with_broker(config: Config, broker: Arc<BrokerClient>) -> anyhow::Result<Self> {
+        config.validate()?;
+        if config.azure_relay_connection_string.is_some()
+            || config.azure_relay_shared_access_key_name.is_some()
+            || config.azure_relay_shared_access_key.is_some()
+            || config.azure_relay_shared_access_signature.is_some()
+            || config
+                .local_forward
+                .iter()
+                .any(|f| f.connection_string.is_some())
+            || config
+                .remote_forward
+                .iter()
+                .any(|f| f.connection_string.is_some())
+        {
+            anyhow::bail!("Managed Host must not contain local Relay credentials");
+        }
+        let endpoint = Url::parse(
+            config
+                .azure_relay_endpoint
+                .as_deref()
+                .ok_or_else(|| anyhow::anyhow!("Managed Host needs a Relay endpoint"))?,
+        )?;
+        if !["sb", "wss", "ws"].contains(&endpoint.scheme())
+            || endpoint.host_str().is_none()
+            || !endpoint.username().is_empty()
+            || endpoint.password().is_some()
+            || endpoint.query().is_some()
+            || endpoint.fragment().is_some()
+            || endpoint.path() != "/" && !endpoint.path().is_empty()
+            || endpoint.scheme() == "ws" && !is_loopback(&endpoint)
+        {
+            anyhow::bail!(
+                "Managed Relay endpoint must be an sb/wss origin (loopback ws is allowed for development)"
+            );
+        }
+        let mut host = Self::new(config);
+        host.broker = Some(broker);
+        // Validate every scope eagerly, even if a binding is later skipped.
+        for forward in &host.config.local_forward {
+            host.credentials(&forward.relay_name, None, RelayRight::Send)?;
+        }
+        for forward in &host.config.remote_forward {
+            host.credentials(&forward.relay_name, None, RelayRight::Listen)?;
+        }
+        Ok(host)
+    }
+
+    fn credentials(
+        &self,
+        relay: &str,
+        override_cs: Option<&str>,
+        right: RelayRight,
+    ) -> anyhow::Result<RelayCredentials> {
+        let Some(broker) = &self.broker else {
+            return self
+                .build_connection_string(relay, override_cs)
+                .map(RelayCredentials::Local);
+        };
+        let endpoint = Url::parse(self.config.azure_relay_endpoint.as_deref().unwrap())?;
+        let mut address = azure_relay::build_relay_address(&endpoint, relay)?;
+        // Explicit loopback-only development endpoint; never downgrade Azure.
+        if endpoint.scheme() == "ws" && is_loopback(&endpoint) {
+            address
+                .set_scheme("ws")
+                .map_err(|_| anyhow::anyhow!("Invalid development Relay endpoint"))?;
+        }
+        let mut providers = self
+            .broker_providers
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let key = (relay.to_string(), right);
+        let provider = if let Some(provider) = providers.get(&key) {
+            provider.clone()
+        } else {
+            let provider = Arc::new(BrokerTokenProvider::new(
+                broker.clone(),
+                &endpoint,
+                relay,
+                right,
+            )?);
+            providers.insert(key, provider.clone());
+            provider
+        };
+        Ok(RelayCredentials::Broker { address, provider })
+    }
+
+    fn client(credentials: &RelayCredentials) -> azure_relay::Result<HybridConnectionClient> {
+        match credentials {
+            RelayCredentials::Local(cs) => HybridConnectionClient::from_connection_string(cs),
+            RelayCredentials::Broker { address, provider } => Ok(HybridConnectionClient::from_uri(
+                address.clone(),
+                provider.clone(),
+            )),
+        }
+    }
+
+    fn listener(credentials: &RelayCredentials) -> azure_relay::Result<HybridConnectionListener> {
+        match credentials {
+            RelayCredentials::Local(cs) => HybridConnectionListener::from_connection_string(cs),
+            RelayCredentials::Broker { address, provider } => Ok(
+                HybridConnectionListener::from_uri(address.clone(), provider.clone()),
+            ),
         }
     }
 
@@ -80,19 +205,21 @@ impl Host {
         let mut handles = self.handles.lock().await;
         let gateway_ports = self.config.gateway_ports.unwrap_or(false);
         let exit_on_forward_failure = self.config.exit_on_forward_failure.unwrap_or(true);
-        let connect_timeout = std::time::Duration::from_secs(
-            self.config.connect_timeout.unwrap_or(60) as u64,
-        );
-        let keep_alive = self.config.keep_alive_interval
+        let connect_timeout =
+            std::time::Duration::from_secs(self.config.connect_timeout.unwrap_or(60) as u64);
+        let keep_alive = self
+            .config
+            .keep_alive_interval
             .map(|secs| Duration::from_secs(secs as u64));
         let address_family = self.config.address_family.as_deref();
         let max_attempts = self.config.connection_attempts.unwrap_or(1) as usize;
 
         // --- Local forward bridges ---
         for lf in &self.config.local_forward {
-            let cs = match self.build_connection_string(
+            let cs = match self.credentials(
                 &lf.relay_name,
                 lf.connection_string.as_deref(),
+                RelayRight::Send,
             ) {
                 Ok(cs) => cs,
                 Err(e) => {
@@ -103,6 +230,15 @@ impl Host {
                     continue;
                 }
             };
+            if let RelayCredentials::Broker { address, provider } = &cs {
+                use azure_relay::token_provider::TokenProvider;
+                provider
+                    .get_token(
+                        &azure_relay::protocol::normalize_audience(address),
+                        Duration::from_secs(3600),
+                    )
+                    .await?;
+            }
 
             let bindings = if lf.bindings.is_empty() {
                 vec![LocalForwardBinding {
@@ -133,7 +269,7 @@ impl Host {
                         let client = 'retry: {
                             let mut last_err = None;
                             for attempt in 1..=max_attempts {
-                                match HybridConnectionClient::from_connection_string(&cs) {
+                                match Self::client(&cs) {
                                     Ok(mut c) => {
                                         if let Some(ka) = keep_alive {
                                             c.set_keep_alive_interval(ka);
@@ -164,8 +300,35 @@ impl Host {
                             continue 'bindings;
                         };
                         let shutdown = self.shutdown.clone();
+                        let bound = if self.broker.is_some() {
+                            use std::os::unix::fs::FileTypeExt;
+                            match std::fs::symlink_metadata(socket_path) {
+                                Ok(metadata) if metadata.file_type().is_socket() => {
+                                    match tokio::net::UnixStream::connect(socket_path).await {
+                                        Err(error)
+                                            if error.kind()
+                                                == std::io::ErrorKind::ConnectionRefused =>
+                                        {
+                                            std::fs::remove_file(socket_path)?;
+                                        }
+                                        _ => anyhow::bail!("Managed Unix socket is already in use"),
+                                    }
+                                }
+                                Ok(_) => anyhow::bail!("Managed Unix socket path is not a socket"),
+                                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                                Err(error) => return Err(error.into()),
+                            }
+                            Some(tokio::net::UnixListener::bind(socket_path)?)
+                        } else {
+                            None
+                        };
                         handles.push(tokio::spawn(async move {
-                            if let Err(e) = bridge.run(client, shutdown).await {
+                            let result = if let Some(listener) = bound {
+                                bridge.run_bound(client, shutdown, listener).await
+                            } else {
+                                bridge.run(client, shutdown).await
+                            };
+                            if let Err(e) = result {
                                 error!(error = %e, "Unix socket local forward bridge failed");
                             }
                         }));
@@ -184,16 +347,13 @@ impl Host {
                     continue;
                 }
 
-                let port_name = binding
-                    .port_name
-                    .clone()
-                    .unwrap_or_else(|| {
-                        if port < 0 {
-                            format!("{}U", port.unsigned_abs())
-                        } else {
-                            port.to_string()
-                        }
-                    });
+                let port_name = binding.port_name.clone().unwrap_or_else(|| {
+                    if port < 0 {
+                        format!("{}U", port.unsigned_abs())
+                    } else {
+                        port.to_string()
+                    }
+                });
 
                 let bind_host = if gateway_ports {
                     binding.bind_address.as_deref().unwrap_or("0.0.0.0")
@@ -224,7 +384,7 @@ impl Host {
                     let client = 'retry: {
                         let mut last_err = None;
                         for attempt in 1..=max_attempts {
-                            match HybridConnectionClient::from_connection_string(&cs) {
+                            match Self::client(&cs) {
                                 Ok(mut c) => {
                                     if let Some(ka) = keep_alive {
                                         c.set_keep_alive_interval(ka);
@@ -255,8 +415,18 @@ impl Host {
                         continue 'bindings;
                     };
                     let shutdown = self.shutdown.clone();
+                    let bound = if self.broker.is_some() {
+                        Some(Arc::new(tokio::net::UdpSocket::bind(bind_addr).await?))
+                    } else {
+                        None
+                    };
                     handles.push(tokio::spawn(async move {
-                        if let Err(e) = bridge.run(client, shutdown).await {
+                        let result = if let Some(socket) = bound {
+                            bridge.run_bound(client, shutdown, socket).await
+                        } else {
+                            bridge.run(client, shutdown).await
+                        };
+                        if let Err(e) = result {
                             error!(error = %e, "UDP local forward bridge failed");
                         }
                     }));
@@ -272,7 +442,7 @@ impl Host {
                     let client = 'retry: {
                         let mut last_err = None;
                         for attempt in 1..=max_attempts {
-                            match HybridConnectionClient::from_connection_string(&cs) {
+                            match Self::client(&cs) {
                                 Ok(mut c) => {
                                     if let Some(ka) = keep_alive {
                                         c.set_keep_alive_interval(ka);
@@ -303,8 +473,18 @@ impl Host {
                         continue 'bindings;
                     };
                     let shutdown = self.shutdown.clone();
+                    let bound = if self.broker.is_some() {
+                        Some(tokio::net::TcpListener::bind(bind_addr).await?)
+                    } else {
+                        None
+                    };
                     handles.push(tokio::spawn(async move {
-                        if let Err(e) = bridge.run(client, shutdown).await {
+                        let result = if let Some(listener) = bound {
+                            bridge.run_bound(client, shutdown, listener).await
+                        } else {
+                            bridge.run(client, shutdown).await
+                        };
+                        if let Err(e) = result {
                             error!(error = %e, "TCP local forward bridge failed");
                         }
                     }));
@@ -314,13 +494,14 @@ impl Host {
 
         // --- Remote forward bridges ---
         // Group by relay_name since multiple bindings can share a listener.
-        let mut remote_groups: HashMap<String, (String, Vec<RemoteForwardBinding>)> =
+        let mut remote_groups: HashMap<String, (RelayCredentials, Vec<RemoteForwardBinding>)> =
             HashMap::new();
 
         for rf in &self.config.remote_forward {
-            let cs = match self.build_connection_string(
+            let cs = match self.credentials(
                 &rf.relay_name,
                 rf.connection_string.as_deref(),
+                RelayRight::Listen,
             ) {
                 Ok(cs) => cs,
                 Err(e) => {
@@ -359,7 +540,7 @@ impl Host {
                     // construction time (DEFAULT_KEEP_ALIVE_INTERVAL) and has no
                     // public setter. A builder pattern or setter would be needed to
                     // override it from config.
-                    match HybridConnectionListener::from_connection_string(&cs) {
+                    match Self::listener(&cs) {
                         Ok(l) => break 'retry l,
                         Err(e) if attempt < max_attempts => {
                             warn!(
@@ -389,20 +570,18 @@ impl Host {
                 continue 'remote_groups;
             };
             let mut forwarders = HashMap::new();
-            let mut http_forwarders: Vec<crate::http_remote_forwarder::HttpRemoteForwarder> = Vec::new();
+            let mut http_forwarders: Vec<crate::http_remote_forwarder::HttpRemoteForwarder> =
+                Vec::new();
 
             for binding in &bindings {
                 let port = binding.host_port;
-                let port_name = binding
-                    .port_name
-                    .clone()
-                    .unwrap_or_else(|| {
-                        if port < 0 {
-                            format!("{}U", port.unsigned_abs())
-                        } else {
-                            port.to_string()
-                        }
-                    });
+                let port_name = binding.port_name.clone().unwrap_or_else(|| {
+                    if port < 0 {
+                        format!("{}U", port.unsigned_abs())
+                    } else {
+                        port.to_string()
+                    }
+                });
 
                 if binding.http {
                     let host = binding.host.as_deref().unwrap_or("localhost");
@@ -486,10 +665,7 @@ impl Host {
                         port_name.clone(),
                         bind_address,
                     );
-                    forwarders.insert(
-                        port_name,
-                        crate::remote_bridge::RemoteForwarder::Udp(fwd),
-                    );
+                    forwarders.insert(port_name, crate::remote_bridge::RemoteForwarder::Udp(fwd));
                 } else {
                     let fwd = crate::tcp::TcpRemoteForwarder::new(
                         target_addr,
@@ -497,10 +673,7 @@ impl Host {
                         connect_timeout,
                         bind_address,
                     );
-                    forwarders.insert(
-                        port_name,
-                        crate::remote_bridge::RemoteForwarder::Tcp(fwd),
-                    );
+                    forwarders.insert(port_name, crate::remote_bridge::RemoteForwarder::Tcp(fwd));
                 }
             }
 
@@ -509,12 +682,17 @@ impl Host {
                 continue;
             }
 
-            let bridge = crate::remote_bridge::RemoteForwardBridge::new(
+            let managed_listener = listener.clone();
+            let mut bridge = crate::remote_bridge::RemoteForwardBridge::new(
                 listener,
                 forwarders,
                 http_forwarders,
                 relay_name.clone(),
             );
+            if self.broker.is_some() {
+                bridge.ready(connect_timeout).await?;
+                self.managed_listeners.lock().await.push(managed_listener);
+            }
             let shutdown = self.shutdown.clone();
             handles.push(tokio::spawn(async move {
                 if let Err(e) = bridge.run(shutdown).await {
@@ -523,6 +701,9 @@ impl Host {
             }));
         }
 
+        if self.broker.is_some() && handles.is_empty() {
+            anyhow::bail!("Managed profile started no forwarding tasks");
+        }
         info!(tasks = handles.len(), "All bridges started");
         Ok(())
     }
@@ -531,9 +712,13 @@ impl Host {
     pub async fn stop(&self) {
         info!("Stopping host");
         self.shutdown.notify_waiters();
+        for listener in self.managed_listeners.lock().await.drain(..) {
+            let _ = listener.close().await;
+        }
         let mut handles = self.handles.lock().await;
         for handle in handles.drain(..) {
             handle.abort();
+            let _ = handle.await;
         }
     }
 
@@ -545,6 +730,16 @@ impl Host {
     pub fn config(&self) -> &Config {
         &self.config
     }
+}
+
+fn is_loopback(endpoint: &Url) -> bool {
+    endpoint.host_str().is_some_and(|host| {
+        host.eq_ignore_ascii_case("localhost")
+            || host
+                .trim_matches(['[', ']'])
+                .parse::<std::net::IpAddr>()
+                .is_ok_and(|ip| ip.is_loopback())
+    })
 }
 
 /// Resolve a host:port string to a SocketAddr, supporting both literal IPs and DNS names.
@@ -644,7 +839,9 @@ mod tests {
         };
         let host = Host::new(config);
         assert_eq!(host.config().keep_alive_interval, Some(30));
-        let ka = host.config().keep_alive_interval
+        let ka = host
+            .config()
+            .keep_alive_interval
             .map(|secs| Duration::from_secs(secs as u64));
         assert_eq!(ka, Some(Duration::from_secs(30)));
     }

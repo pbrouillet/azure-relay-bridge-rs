@@ -1,10 +1,18 @@
+use clap::{Parser, Subcommand};
 use std::path::PathBuf;
-use clap::Parser;
 
 /// Azure Relay Bridge - Create TCP/UDP/HTTP tunnels via Azure Relay.
 #[derive(Parser, Debug)]
-#[command(name = "azbridge", version, about)]
+#[command(
+    name = "azbridge",
+    version,
+    about,
+    before_help = crate::banner::BANNER,
+    args_conflicts_with_subcommands = true
+)]
 pub struct Cli {
+    #[command(subcommand)]
+    pub command: Option<ManagedCommand>,
     /// Configuration file to use.
     #[arg(short = 'f', long = "config-file")]
     pub config_file: Option<PathBuf>,
@@ -90,6 +98,33 @@ pub struct Cli {
     pub tui: bool,
 }
 
+#[derive(Subcommand, Debug)]
+pub enum ManagedCommand {
+    /// Enroll this gateway through the broker's GitHub device flow.
+    Login {
+        #[arg(long)]
+        broker: String,
+        #[arg(long)]
+        workspace: String,
+        #[arg(long)]
+        profile: String,
+        #[arg(long)]
+        name: Option<String>,
+        #[arg(long)]
+        machine: bool,
+    },
+    /// Revoke this gateway credential and remove saved enrollment.
+    Logout {
+        #[arg(long)]
+        machine: bool,
+    },
+    /// Show enrollment and verify broker connectivity (never prints credentials).
+    Status {
+        #[arg(long)]
+        machine: bool,
+    },
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -97,20 +132,35 @@ mod tests {
 
     #[test]
     fn parse_minimal_args() {
-        let cli = Cli::try_parse_from(["azbridge", "-L", "8080:myrelay", "-e", "sb://test.servicebus.windows.net"]).unwrap();
+        let cli = Cli::try_parse_from([
+            "azbridge",
+            "-L",
+            "8080:myrelay",
+            "-e",
+            "sb://test.servicebus.windows.net",
+        ])
+        .unwrap();
         assert_eq!(cli.local_forward, vec!["8080:myrelay"]);
-        assert_eq!(cli.endpoint_uri.as_deref(), Some("sb://test.servicebus.windows.net"));
+        assert_eq!(
+            cli.endpoint_uri.as_deref(),
+            Some("sb://test.servicebus.windows.net")
+        );
     }
 
     #[test]
     fn parse_multiple_forwards() {
         let cli = Cli::try_parse_from([
             "azbridge",
-            "-L", "8080:relay1",
-            "-L", "9090:relay2",
-            "-T", "relay3:3000",
-            "-e", "sb://test.servicebus.windows.net",
-        ]).unwrap();
+            "-L",
+            "8080:relay1",
+            "-L",
+            "9090:relay2",
+            "-T",
+            "relay3:3000",
+            "-e",
+            "sb://test.servicebus.windows.net",
+        ])
+        .unwrap();
         assert_eq!(cli.local_forward.len(), 2);
         assert_eq!(cli.remote_forward.len(), 1);
     }
@@ -119,23 +169,37 @@ mod tests {
     fn parse_all_flags() {
         let cli = Cli::try_parse_from([
             "azbridge",
-            "-e", "sb://ns.servicebus.windows.net",
-            "-x", "Endpoint=sb://ns.servicebus.windows.net;SharedAccessKeyName=k;SharedAccessKey=v",
-            "-K", "keyname",
-            "-k", "keyvalue",
-            "-s", "SharedAccessSignature sr=foo",
-            "-L", "8080:relay1",
-            "-T", "relay2:9090",
-            "-H", "relay3:http/localhost:80",
-            "-f", "config.yml",
-            "-l", "output.log",
+            "-e",
+            "sb://ns.servicebus.windows.net",
+            "-x",
+            "Endpoint=sb://ns.servicebus.windows.net;SharedAccessKeyName=k;SharedAccessKey=v",
+            "-K",
+            "keyname",
+            "-k",
+            "keyvalue",
+            "-s",
+            "SharedAccessSignature sr=foo",
+            "-L",
+            "8080:relay1",
+            "-T",
+            "relay2:9090",
+            "-H",
+            "relay3:http/localhost:80",
+            "-f",
+            "config.yml",
+            "-l",
+            "output.log",
             "-q",
             "-v",
             "-g",
-            "-b", "0.0.0.0",
-            "-o", "KeepAliveInterval:60",
-            "-a", "30",
-        ]).unwrap();
+            "-b",
+            "0.0.0.0",
+            "-o",
+            "KeepAliveInterval:60",
+            "-a",
+            "30",
+        ])
+        .unwrap();
         assert!(cli.quiet);
         assert_eq!(cli.verbose, 1);
         assert!(cli.gateway_ports);
@@ -156,7 +220,14 @@ mod tests {
 
     #[test]
     fn parse_legacy_remote_forward() {
-        let cli = Cli::try_parse_from(["azbridge", "-R", "relay:host:8080", "-e", "sb://test.servicebus.windows.net"]).unwrap();
+        let cli = Cli::try_parse_from([
+            "azbridge",
+            "-R",
+            "relay:host:8080",
+            "-e",
+            "sb://test.servicebus.windows.net",
+        ])
+        .unwrap();
         assert_eq!(cli.remote_forward_legacy, vec!["relay:host:8080"]);
     }
 }

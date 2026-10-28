@@ -1,6 +1,8 @@
 // Bridge modules are scaffolded; suppress dead_code until host orchestrator wires them.
 #![allow(dead_code)]
 
+mod banner;
+mod broker;
 mod cli;
 mod config;
 mod config_loader;
@@ -19,6 +21,7 @@ mod tui;
 mod udp;
 
 use clap::Parser;
+use std::io::IsTerminal;
 use tracing::info;
 
 #[tokio::main]
@@ -26,8 +29,15 @@ async fn main() -> anyhow::Result<()> {
     // Parse CLI arguments
     let cli = cli::Cli::parse();
 
+    if let Some(ref command) = cli.command {
+        return broker::handle_command(command).await;
+    }
+
     // Handle TUI mode
     if cli.tui {
+        if broker::discover_state(false)?.is_some() {
+            anyhow::bail!("TUI is local-only and unavailable while enrolled in managed mode");
+        }
         return tui::run().await;
     }
 
@@ -48,15 +58,13 @@ async fn main() -> anyhow::Result<()> {
     #[cfg(not(windows))]
     {
         if cli.svc_install || cli.svc_uninstall || cli.svc {
-            anyhow::bail!(
-                "Windows Service commands (-I, -U, --svc) are only supported on Windows"
-            );
+            anyhow::bail!("Windows Service commands (-I, -U, --svc) are only supported on Windows");
         }
     }
 
     // Load configuration (merges machine/user/file/CLI layers)
-    let config = config_loader::load_config(&cli)?;
-    config.validate()?;
+    let bootstrap = broker::bootstrap(&cli, false).await?;
+    let config = &bootstrap.config;
 
     // Determine log level: CLI flags override config
     let log_level = if cli.quiet {
@@ -94,9 +102,14 @@ async fn main() -> anyhow::Result<()> {
     // Validate connection string or endpoint.
     // A global connection is not required when every forward entry carries its
     // own ConnectionString.
-    let all_forwards_have_cs =
-        config.local_forward.iter().all(|lf| lf.connection_string.is_some())
-        && config.remote_forward.iter().all(|rf| rf.connection_string.is_some());
+    let all_forwards_have_cs = config
+        .local_forward
+        .iter()
+        .all(|lf| lf.connection_string.is_some())
+        && config
+            .remote_forward
+            .iter()
+            .all(|rf| rf.connection_string.is_some());
 
     if config.azure_relay_connection_string.is_none()
         && config.azure_relay_endpoint.is_none()
@@ -107,6 +120,17 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
+    if banner::should_show_banner(
+        &cli,
+        std::io::stderr().is_terminal(),
+        std::env::var_os("AZBRIDGE_NO_BANNER").as_deref(),
+        log_level,
+    ) {
+        use anyhow::Context;
+        banner::write_banner(&mut std::io::stderr().lock())
+            .context("Failed to write startup banner")?;
+    }
+
     info!(
         local_forwards = config.local_forward.len(),
         remote_forwards = config.remote_forward.len(),
@@ -114,8 +138,7 @@ async fn main() -> anyhow::Result<()> {
     );
 
     // Start the host
-    let host = std::sync::Arc::new(host::Host::new(config));
-    host.start().await?;
+    let host = bootstrap.start().await?;
 
     info!("Azure Relay Bridge is running. Press Ctrl+C to stop.");
 
@@ -135,9 +158,8 @@ async fn shutdown_signal() {
 
     #[cfg(unix)]
     {
-        let mut sigterm =
-            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-                .expect("failed to register SIGTERM handler");
+        let mut sigterm = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to register SIGTERM handler");
         tokio::select! {
             _ = ctrl_c => {}
             _ = sigterm.recv() => {}

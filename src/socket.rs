@@ -54,6 +54,15 @@ impl SocketLocalForwardBridge {
         let _ = std::fs::remove_file(&self.socket_path);
 
         let listener = UnixListener::bind(&self.socket_path)?;
+        self.run_bound(client, shutdown, listener).await
+    }
+
+    pub(crate) async fn run_bound(
+        &self,
+        client: Arc<azure_relay::HybridConnectionClient>,
+        shutdown: Arc<tokio::sync::Notify>,
+        listener: tokio::net::UnixListener,
+    ) -> anyhow::Result<()> {
         tracing::info!(path = %self.socket_path.display(), relay = %self.relay_name, "Unix socket local forward listening");
 
         loop {
@@ -97,7 +106,11 @@ async fn handle_local_socket_connection(
     preamble::read_response(&mut relay_stream).await?;
 
     let (a_to_b, b_to_a) = crate::stream_pump::run(unix_stream, relay_stream).await?;
-    tracing::debug!(sent = a_to_b, received = b_to_a, "Unix socket local forward connection completed");
+    tracing::debug!(
+        sent = a_to_b,
+        received = b_to_a,
+        "Unix socket local forward connection completed"
+    );
     Ok(())
 }
 
