@@ -121,3 +121,40 @@ describe('reconciliation YAML edits', () => {
     expect(parse(yaml).RemoteForward[0].Bindings.map((binding: { PortName: string }) => binding.PortName)).toEqual(['new', 'added'])
   })
 })
+
+describe('canonical origin reconciliation', () => {
+  const clientYaml = '# keep\nLocalForward:\n- RelayName: r\n  BindAddress: app.example.test\n  BindPort: 44301\n- RelayName: r\n  BindAddress: new.example.test\n  BindPort: 44302\n  PortName: new\n- RelayName: r\n  BindAddress: 127.0.0.1\n  BindPort: 44303\n  PortName: ip\n'
+  const serverYaml = 'RemoteForward:\n- RelayName: r\n  Host: app.example.test\n  HostPort: 443\n  PortName: "44301"\n'
+  const relay = () => buildRelayMap([source('client', clientYaml), source('server', serverYaml)], ready)[0]
+  it('proposes canonical ports for mismatched and new hostname listeners only', () => {
+    const plan = planReconciliation(relay())
+    expect(plan.ports.map(item => [item.listener.portName, item.port, item.reason])).toEqual([['44301', 443, 'mismatch'], ['new', 443, 'new']])
+  })
+  it('moves the listener port, keeps the hostname and preserves a default PortName', () => {
+    const plan = planReconciliation(relay())
+    const yaml = applyToYaml(clientYaml, plan.ports.map(item => ({ kind: 'port' as const, endpoint: item.listener, port: item.port! })), ['r'])
+    expect(yaml.startsWith('# keep\n')).toBe(true)
+    const value = parse(yaml)
+    expect(value.LocalForward[0]).toEqual({ RelayName: 'r', BindAddress: 'app.example.test', BindPort: 443, PortName: '44301' })
+    expect(value.LocalForward[1]).toMatchObject({ BindAddress: 'new.example.test', BindPort: 443, PortName: 'new' })
+    expect(value.LocalForward[2].BindPort).toBe(44303)
+    const after = buildRelayMap([source('client', yaml), source('server', serverYaml)], ready)[0]
+    const moved = after.endpoints.find(endpoint => endpoint.portName === '44301' && endpoint.direction === 'listener')!
+    expect(moved.status).toBe('Complete')
+    expect(moved.originMismatch).toBeUndefined()
+    expect(after.originMismatches).toBe(0)
+  })
+  it('rejects stale bindings, invalid ports and duplicate host:port listeners', () => {
+    const listener = planReconciliation(relay()).ports[0].listener
+    expect(() => applyToYaml(clientYaml, [{ kind: 'port', endpoint: { ...listener, host: 'other.example.test' }, port: 443 }], ['r'])).toThrow('changed since this review')
+    expect(() => applyToYaml(clientYaml, [{ kind: 'port', endpoint: listener, port: 70000 }], ['r'])).toThrow('1 to 65535')
+    const duplicate = clientYaml + '- RelayName: r\n  BindAddress: APP.example.test\n  BindPort: 443\n  PortName: other\n'
+    expect(() => applyToYaml(duplicate, [{ kind: 'port', endpoint: listener, port: 443 }], ['r'])).toThrow('Another listener already uses app.example.test:443')
+  })
+  it('combines rename, port and add changes on one revision in a safe order', () => {
+    const yaml = 'LocalForward:\n- RelayName: r\n  BindAddress: app.example.test\n  BindPort: 44301\n  PortName: new\n'
+    const endpoint = extractEndpoints(yaml)[0]
+    const result = parse(applyToYaml(yaml, [{ kind: 'port', endpoint, port: 443 }, { kind: 'rename', endpoint, portName: 'old' }], ['r']))
+    expect(result.LocalForward[0]).toEqual({ RelayName: 'r', BindAddress: 'app.example.test', BindPort: 443, PortName: 'old' })
+  })
+})

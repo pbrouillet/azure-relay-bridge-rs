@@ -6,6 +6,7 @@ import '../designer/designer.css'
 import './relays.css'
 import { categoryLabels, type EndpointCategory, type MappedEndpoint, type MappedRelay } from './relayMap'
 import { ReconcileButton, type ReconcileContext } from './ReconcileDialog'
+import { HostsEntriesButton } from './HostsEntries'
 
 const address = (endpoint: MappedEndpoint) => endpoint.socket ?? `${endpoint.host ?? 'localhost'}:${endpoint.port}`
 const publication = (endpoint: MappedEndpoint) => endpoint.source.revision === undefined ? 'Import draft' : `${endpoint.source.revision === endpoint.source.profile.currentRevision ? 'Published' : 'Draft'} revision ${endpoint.source.revision}`
@@ -86,16 +87,17 @@ function RelayDiagram({ relay }: { relay: MappedRelay }) {
 const categoryOrder: EndpointCategory[] = ['complete', 'partial', 'renamed', 'clientDisabled', 'newClient', 'orphanServer', 'httpDirect', 'disabled']
 
 function RelaySection({ relay, onOpenProfile, reconcile }: { relay: MappedRelay; onOpenProfile?: (id: string) => void; reconcile?: ReconcileContext }) {
-  const [filter, setFilter] = useState<EndpointCategory | null>(null)
+  const [filter, setFilter] = useState<EndpointCategory | 'origin' | null>(null)
   const active = relay.endpoints.filter(endpoint => !endpoint.disabled)
   const listeners = active.filter(endpoint => endpoint.direction === 'listener')
   const destinations = active.filter(endpoint => endpoint.direction === 'destination')
   const disabled = relay.endpoints.length - active.length
   const byKey = new Map(relay.endpoints.map(endpoint => [endpoint.key, endpoint]))
-  const shown = filter ? relay.endpoints.filter(endpoint => endpoint.category === filter) : relay.endpoints
+  const shown = filter === 'origin' ? relay.endpoints.filter(endpoint => endpoint.originMismatch) : filter ? relay.endpoints.filter(endpoint => endpoint.category === filter) : relay.endpoints
   return <section className="relay-map-section" aria-label={`Relay ${relay.name}`}>
     <div className="relay-map-heading"><h3>{relay.name}</h3><Badge appearance="tint" color={relay.complete ? 'success' : 'warning'}>{relay.complete ? 'Complete' : 'Incomplete'}</Badge>
       {reconcile && <ReconcileButton relay={relay} context={reconcile} />}
+      <HostsEntriesButton relay={relay} />
     </div>
     <p className="relay-map-counts">{listeners.length} listeners · {destinations.length} destinations · {listeners.filter(endpoint => endpoint.status === 'Complete').length} paired routes · {disabled} disabled in source</p>
     {!!relay.reasons.length && <p className="relay-map-reasons">Incomplete - {relay.reasons.join('; ')}.</p>}
@@ -106,6 +108,8 @@ function RelaySection({ relay, onOpenProfile, reconcile }: { relay: MappedRelay;
         <Button size="small" appearance={filter === null ? 'primary' : 'secondary'} aria-pressed={filter === null} onClick={() => setFilter(null)}>All endpoints ({relay.endpoints.length})</Button>
         {categoryOrder.filter(category => relay.categories[category] > 0).map(category => <Button key={category} size="small" appearance={filter === category ? 'primary' : 'secondary'} aria-pressed={filter === category}
           onClick={() => setFilter(filter === category ? null : category)}>{categoryLabels[category]} ({relay.categories[category]})</Button>)}
+        {relay.originMismatches > 0 && <Button size="small" appearance={filter === 'origin' ? 'primary' : 'secondary'} aria-pressed={filter === 'origin'}
+          onClick={() => setFilter(filter === 'origin' ? null : 'origin')}>Browser origin differs ({relay.originMismatches})</Button>}
       </div>
     </div>}
     <p className="muted">Configuration analysis, not a live connectivity check. Pairing follows the runtime: exact PortName within each relay. Categories and hints are diagnostic; YAML changes only through Reconcile.</p>
@@ -114,7 +118,7 @@ function RelaySection({ relay, onOpenProfile, reconcile }: { relay: MappedRelay;
       <TableHeader><TableRow>{['Side / protocol', 'Endpoint', 'Port name', 'Profile / revision', 'Status / hints', 'Diagnosis'].map(label => <TableHeaderCell key={label}>{label}</TableHeaderCell>)}</TableRow></TableHeader>
       <TableBody>{shown.map(endpoint => {
         const counterpart = endpoint.counterpart ? byKey.get(endpoint.counterpart) : undefined
-        return <TableRow key={endpoint.key} data-status={endpoint.status} data-category={endpoint.category}>
+        return <TableRow key={endpoint.key} data-status={endpoint.status} data-category={endpoint.category} data-origin={endpoint.originMismatch ? 'mismatch' : undefined}>
           <TableCell>{endpoint.direction === 'listener' ? 'Client listener' : 'Server destination'}<br />{endpoint.protocol.toUpperCase()}</TableCell>
           <TableCell className="mono">{address(endpoint)}{endpoint.path && <><br />Path: {endpoint.path}</>}</TableCell>
           <TableCell className="mono">{endpoint.portName || '(empty)'}{!endpoint.explicitPortName && <span className="muted"> (default)</span>}</TableCell>

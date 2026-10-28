@@ -25,3 +25,6 @@
 @media (max-width: 720px) {
   .relay-map-section { padding: 12px; }
 }
+.hosts-block { margin: 16px 0; }
+.hosts-block h3 { margin: 0 0 8px; overflow-wrap: anywhere; }
+.hosts-block .actions { margin-top: 8px; }

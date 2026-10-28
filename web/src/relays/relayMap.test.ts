@@ -137,3 +137,30 @@ describe('reconciliation diagnosis', () => {
     expect(buildRelayMap([], ready)[0]).toMatchObject({ diagnosis: '', categories: expect.objectContaining({ complete: 0 }) })
   })
 })
+
+describe('browser origin diagnosis', () => {
+  const pair = (clientPort: number, serverPort = 443, host = 'app.example.test') => [
+    source('client', `LocalForward:\n- RelayName: r\n  BindAddress: ${host}\n  BindPort: ${clientPort}\n  PortName: web\n`),
+    source('server', `RemoteForward:\n- RelayName: r\n  Host: ${host}\n  HostPort: ${serverPort}\n  PortName: web\n`),
+  ]
+  it('flags hostname listeners whose port differs from the paired destination without changing pairing', () => {
+    const map = buildRelayMap(pair(44301), ready)[0]
+    expect(map.complete).toBe(true)
+    expect(map.originMismatches).toBe(1)
+    expect(map.endpoints[0].originMismatch).toEqual({ port: 443, counterpart: 'server/remote-0-0' })
+    expect(map.endpoints[0].hints.join(' ')).toContain('Redirects and sign-in to https://app.example.test/ will leave the tunnel')
+    expect(map.warnings.join(' ')).toContain('1 client listener uses a different port than its destination')
+    expect(buildRelayMap(pair(8443, 8443), ready)[0].originMismatches).toBe(0)
+    expect(buildRelayMap(pair(44301, 8443), ready)[0].endpoints[0].hints.join(' ')).toContain('https://app.example.test:8443/')
+  })
+  it('ignores IP, loopback and UDP listeners and uses renamed same-host counterparts', () => {
+    expect(buildRelayMap(pair(44301, 443, '127.0.0.1'), ready)[0].originMismatches).toBe(0)
+    const udp = buildRelayMap([source('c', 'LocalForward:\n- RelayName: r\n  BindAddress: d.example.test\n  BindPort: -5300\n  PortName: dns\n'), source('s', 'RemoteForward:\n- RelayName: r\n  Host: d.example.test\n  HostPort: -53\n  PortName: dns\n')], ready)[0]
+    expect(udp.originMismatches).toBe(0)
+    const renamed = buildRelayMap([
+      source('client', 'LocalForward:\n- RelayName: r\n  BindAddress: app.example.test\n  BindPort: 44301\n  PortName: new\n'),
+      source('server', 'RemoteForward:\n- RelayName: r\n  Host: app.example.test\n  HostPort: 443\n  PortName: old\n'),
+    ], ready)[0]
+    expect(renamed.endpoints[0]).toMatchObject({ category: 'renamed', originMismatch: { port: 443 } })
+  })
+})

@@ -233,6 +233,9 @@ once every file is saved. It never preselects a change. It offers:
   editable. Unix socket listeners must be configured manually.
 - **Align likely renamed PortNames**: for each pair, rename the server or the
   client, or leave both unchanged.
+- **Use canonical origins**: move a hostname listener to its destination's port
+  (usually 443), keeping its BindAddress and PortName. A default PortName (the old
+  port number) is written explicitly so pairing does not change.
 
 Selected changes are applied to the reviewed latest saved revision with the
 Designer's comment-preserving edits, validated by the broker, and saved as one new
@@ -240,6 +243,34 @@ Designer's comment-preserving edits, validated by the broker, and saved as one n
 stay disabled. If a profile changed after the review, nothing is saved; close the
 dialog and review again. Duplicate PortNames within a server group are rejected.
 A validation failure in one profile does not roll back saves in other profiles.
+
+### Browser sign-in and canonical origins
+
+Web applications build absolute URLs from their own address, usually
+`https://<host>/`. That includes `Location` redirects, the OIDC/OAuth
+`redirect_uri` registered with the identity provider, form posts back from the
+identity provider and SAML assertion destinations. If the browser reaches the
+application through a listener at `https://<host>:44305`, every one of those hops
+goes to port 443 instead and leaves the tunnel, so sign-in fails.
+
+azbridge does not rewrite traffic to work around this. Tunnels carry the
+application's own TLS, so rewriting would require decrypting it on every client
+with a locally trusted certificate authority. Even then, the identity provider only
+accepts the registered redirect URI and sends the browser to it directly, never
+through azbridge, and SAML destinations are signed.
+
+Instead, keep the browser on the application's real origin. Give each hostname its
+own loopback address and bind its listener on the destination's port, as upstream
+azbridge documents. The Relays tab flags **Browser origin differs** when a hostname
+listener's port does not match its paired destination, and **Reconcile** can fix the
+ports. **Hosts entries** then shows, for each client profile, a hosts-file block
+mapping every listener hostname to a stable address in `127.77.0.0/16`, with Copy
+and Download. The same deterministic rule is used by `azbridge hosts`, so the
+browser block and the CLI agree.
+
+When several hostnames share one address (for example all on `127.0.0.1`), each
+listener needs a unique port, and the gateway logs a warning at startup. Two
+listeners that resolve to the same address and port stop startup with a clear error.
 
 Missing connections can be created only by workspace admins, with explicit review
 consent. The importer waits up to two minutes for Ready and reports failed/deleting

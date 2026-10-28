@@ -1,4 +1,5 @@
 import type { Connection, RelayMapEndpoint, RelayMapProfile } from '../api/generated'
+import { isAliasableHost } from './loopback'
 
 export type EndpointStatus = 'Complete' | 'Client only' | 'Server only' | 'HTTP direct' | 'Disabled in source'
 // Diagnostic grouping only; runtime pairing is the exact `status` above.
@@ -20,6 +21,8 @@ export interface MappedEndpoint extends RelayMapEndpoint {
   category: EndpointCategory
   /** Key of the likely counterpart for `renamed`, or of the disabled client entry for `clientDisabled`. */
   counterpart?: string
+  /** Hostname listener whose port differs from its paired destination's port. */
+  originMismatch?: { port: number; counterpart: string }
   matches: string[]
   hints: string[]
 }
@@ -29,6 +32,7 @@ export interface MappedRelay {
   reasons: string[]
   warnings: string[]
   categories: Record<EndpointCategory, number>
+  originMismatches: number
   diagnosis: string
   endpoints: MappedEndpoint[]
   connection?: Connection
@@ -71,7 +75,7 @@ const groupKey = (endpoint: MappedEndpoint) => `${endpoint.source.profile.id}/${
 
 export function buildRelayMap(profiles: readonly RelayMapProfile[], connections: readonly Connection[]): MappedRelay[] {
   const relays = new Map<string, MappedRelay>()
-  const blank = (name: string, connection?: Connection): MappedRelay => ({ name, connection, complete: false, reasons: [], warnings: [], categories: emptyCategories(), diagnosis: '', endpoints: [] })
+  const blank = (name: string, connection?: Connection): MappedRelay => ({ name, connection, complete: false, reasons: [], warnings: [], categories: emptyCategories(), originMismatches: 0, diagnosis: '', endpoints: [] })
   for (const connection of connections) relays.set(connection.name, blank(connection.name, connection))
   for (const source of profiles) for (const endpoint of source.endpoints) {
     const relay = relays.get(endpoint.relayName) ?? blank(endpoint.relayName)
@@ -168,6 +172,24 @@ export function buildRelayMap(profiles: readonly RelayMapProfile[], connections:
       }
     }
     for (const endpoint of relay.endpoints) relay.categories[endpoint.category]++
+    // Browser origins: a hostname listener should use its destination's port, otherwise
+    // absolute redirects (sign-in, Location headers) to https://<host>/ leave the tunnel.
+    const byKey = new Map(relay.endpoints.map(endpoint => [endpoint.key, endpoint]))
+    for (const client of clients) {
+      if (client.protocol !== 'tcp' || !isAliasableHost(client.host)) continue
+      const counterparts = [
+        ...client.matches.map(key => byKey.get(key)),
+        ...(client.category === 'renamed' && client.counterpart ? [byKey.get(client.counterpart)] : []),
+      ].filter((server): server is MappedEndpoint => !!server && (client.category !== 'renamed' || client.matches.includes(server.key) || sameTargetHost(client, server)))
+      const other = counterparts.find(server => server.port > 0 && server.port !== client.port)
+      if (!other) continue
+      client.originMismatch = { port: other.port, counterpart: other.key }
+      client.hints.push(`Browser origin differs: listens on port ${client.port} but the destination uses ${other.port}. Redirects and sign-in to https://${client.host}${other.port === 443 ? '' : `:${other.port}`}/ will leave the tunnel.`)
+      relay.originMismatches++
+    }
+    if (relay.originMismatches) {
+      relay.warnings.push(`${plural(relay.originMismatches, 'client listener uses', 'client listeners use')} a different port than ${relay.originMismatches === 1 ? 'its' : 'their'} destination. Browser redirects and sign-in to the application's own address will leave the tunnel; use the canonical origin (one loopback address per hostname).`)
+    }
     relay.diagnosis = diagnose(relay.categories, clients.length, servers.length)
     if (!relay.connection) relay.reasons.push('Workspace connection missing')
     else if (relay.connection.state !== 'ready') relay.reasons.push(`Workspace connection is ${relay.connection.state}`)

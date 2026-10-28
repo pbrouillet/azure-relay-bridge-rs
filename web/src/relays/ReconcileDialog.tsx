@@ -16,7 +16,7 @@ export function ReconcileButton({ relay, context }: { relay: MappedRelay; contex
   const [snapshot, setSnapshot] = useState<{ relay: MappedRelay; plan: ReturnType<typeof planReconciliation>; id: number } | null>(null)
   const [open, setOpen] = useState(false)
   return <>
-    {(plan.adds.length > 0 || plan.renames.length > 0) && <Button onClick={() => { setSnapshot(current => ({ relay, plan, id: (current?.id ?? 0) + 1 })); setOpen(true) }}>Reconcile {relay.name}</Button>}
+    {(plan.adds.length > 0 || plan.renames.length > 0 || plan.ports.length > 0) && <Button onClick={() => { setSnapshot(current => ({ relay, plan, id: (current?.id ?? 0) + 1 })); setOpen(true) }}>Reconcile {relay.name}</Button>}
     {/* Close through `open` so Fluent restores the page's accessibility state before removal. */}
     {snapshot && <ReconcileDialog key={snapshot.id} open={open} relay={snapshot.relay} plan={snapshot.plan} context={context} onClose={() => setOpen(false)} />}
   </>
@@ -27,6 +27,7 @@ function ReconcileDialog({ open, relay, plan, context, onClose }: { open: boolea
   const [target, setTarget] = useState(plan.serverProfiles.length === 1 ? plan.serverProfiles[0].profile.id : '')
   const [adds, setAdds] = useState(() => Object.fromEntries(plan.adds.map(add => [add.id, { selected: false, host: add.host, port: add.port === null ? '' : String(add.port) }])))
   const [renames, setRenames] = useState<Record<string, RenameDirection>>(() => Object.fromEntries(plan.renames.map(rename => [rename.id, 'skip'])))
+  const [ports, setPorts] = useState(() => Object.fromEntries(plan.ports.map(item => [item.id, { selected: false, port: item.port === null ? '' : String(item.port) }])))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [results, setResults] = useState<Result[]>([])
@@ -35,8 +36,10 @@ function ReconcileDialog({ open, relay, plan, context, onClose }: { open: boolea
   const applicable = plan.adds.filter(add => !add.manualReason)
   const selectedAdds = applicable.filter(add => adds[add.id].selected)
   const chosenRenames = plan.renames.filter(rename => renames[rename.id] !== 'skip')
-  const invalid = selectedAdds.some(add => !adds[add.id].host.trim() || !/^\d+$/.test(adds[add.id].port) || Number(adds[add.id].port) < 1 || Number(adds[add.id].port) > 65535)
-  const blocked = busy || !ready || imported || (!selectedAdds.length && !chosenRenames.length) || invalid || (!!selectedAdds.length && !target) || results.some(result => result.ok)
+  const selectedPorts = plan.ports.filter(item => ports[item.id].selected)
+  const validPort = (value: string) => /^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 65535
+  const invalid = selectedAdds.some(add => !adds[add.id].host.trim() || !validPort(adds[add.id].port)) || selectedPorts.some(item => !validPort(ports[item.id].port))
+  const blocked = busy || !ready || imported || (!selectedAdds.length && !chosenRenames.length && !selectedPorts.length) || invalid || (!!selectedAdds.length && !target) || results.some(result => result.ok)
 
   async function apply() {
     setBusy(true)
@@ -59,6 +62,7 @@ function ReconcileDialog({ open, relay, plan, context, onClose }: { open: boolea
         const [side, name] = renames[rename.id] === 'server' ? [rename.server, rename.client.portName] : [rename.client, rename.server.portName]
         add(side.source, { kind: 'rename', endpoint: side, portName: name })
       }
+      for (const item of selectedPorts) add(item.listener.source, { kind: 'port', endpoint: item.listener, port: Number(ports[item.id].port) })
       // Every write is based on the reviewed revision; a newer save means the review is stale.
       const latest = await request<RelayMapResponse>(`${context.base}/relay-map`)
       for (const [id, entry] of work) {
@@ -133,13 +137,27 @@ function ReconcileDialog({ open, relay, plan, context, onClose }: { open: boolea
               </Select></TableCell>
             </TableRow>)}</TableBody></Table></div>
           </section>}
-          {invalid && <p className="danger" role="alert">Enter a host and a port from 1 to 65535 for every selected destination.</p>}
+          {!!plan.ports.length && <section aria-labelledby="reconcile-ports">
+            <h3 id="reconcile-ports">Use canonical origins</h3>
+            <p className="muted">Browsers, redirects and sign-in use the application's own address (for example https://host/ on 443). Listening on the destination's port keeps every hop inside the tunnel. The hostname and PortName are kept; each hostname then needs its own loopback address from the hosts entries.</p>
+            <div className="table-scroll"><Table aria-label="Canonical origin listeners"><TableHeader><TableRow>
+              {['Change', 'Client listener', 'Reason', 'New port'].map(label => <TableHeaderCell key={label}>{label}</TableHeaderCell>)}
+            </TableRow></TableHeader><TableBody>{plan.ports.map(item => <TableRow key={item.id}>
+              <TableCell><Checkbox aria-label={`Use canonical port for ${item.listener.portName}`} disabled={busy} checked={ports[item.id].selected}
+                onChange={(_, data) => setPorts(current => ({ ...current, [item.id]: { ...current[item.id], selected: data.checked === true } }))} /></TableCell>
+              <TableCell><span className="mono">{item.listener.portName}</span><br />{item.listener.source.profile.name} · <span className="mono">{address(item.listener.host, item.listener.port, item.listener.socket)}</span></TableCell>
+              <TableCell>{item.reason === 'mismatch' ? 'Destination uses a different port' : 'New listener; matches the proposed destination port'}</TableCell>
+              <TableCell><Input aria-label={`Listener port for ${item.listener.portName}`} disabled={busy} inputMode="numeric" value={ports[item.id].port}
+                onChange={(_, data) => setPorts(current => ({ ...current, [item.id]: { ...current[item.id], port: data.value.trim() } }))} /></TableCell>
+            </TableRow>)}</TableBody></Table></div>
+          </section>}
+          {invalid && <p className="danger" role="alert">Enter a host and a port from 1 to 65535 for every selected row.</p>}
           {error && <MessageBar intent="error" role="alert"><MessageBarBody>{error.message}</MessageBarBody></MessageBar>}
           {busy && <Spinner size="tiny" label="Validating and saving draft revisions..." />}
           {!!results.length && <ul className="reconcile-results">{results.map(result => <li key={result.profile} role={result.ok ? 'status' : 'alert'} className={result.ok ? 'relay-map-success' : 'danger'}>
             <strong>{result.profile}</strong>: {result.message}
           </li>)}</ul>}
-          {results.some(result => result.ok) && <p>Review the drafts in Profiles, then publish them when ready. Gateways apply published revisions on restart.</p>}
+          {results.some(result => result.ok) && <p>Review the drafts in Profiles, then publish them when ready. Gateways apply published revisions on restart.{selectedPorts.length > 0 && ' Then apply the hosts entries on each client machine (Hosts entries on this relay, or `azbridge hosts apply`).'}</p>}
         </DialogContent>
         <DialogActions>
           <Button disabled={busy} onClick={onClose}>{results.length ? 'Close' : 'Cancel'}</Button>

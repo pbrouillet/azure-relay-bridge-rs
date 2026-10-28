@@ -91,6 +91,7 @@ async function file(name: string) {
 }
 
 test('imports both files into unpublished revisions through the real review wizard at 375px in both themes', async ({ page }) => {
+  test.setTimeout(180_000)
   const state = await fixtures(page)
   for (const theme of ['light', 'dark']) {
     await page.getByRole('combobox', { name: 'Appearance' }).click()
@@ -184,7 +185,6 @@ test('imports both files into unpublished revisions through the real review wiza
   }
   await expect(relay).toContainText('16 listeners · 23 destinations · 16 paired routes · 8 disabled in source')
   await expect(relay).toContainText('Diagnosis: The server configuration appears to match an older client layout: 7 destinations wait for commented-out client entries.')
-  await expect(relay.getByRole('button', { name: 'Reconcile example-relay' })).toHaveCount(0)
   expect(state.revisions.get(serverId)).toHaveLength(2)
   expect(state.revisions.get(clientId)).toHaveLength(1)
   const reconciled = state.revisions.get(serverId)![1].yaml
@@ -192,6 +192,45 @@ test('imports both files into unpublished revisions through the real review wiza
   expect(reconciled).toContain('PortName: service-10\n')
   expect(reconciled).not.toContain('service-10-legacy')
   expect(state.mutations.slice(-2)).toEqual([`${base}/profiles/${serverId}/validate`, `${base}/profiles/${serverId}/revisions`])
+  // Every listener uses a 443xx port while its destination uses 443: browser origins differ.
+  await expect(relay).toContainText('16 client listeners use a different port than their destination')
+  await relay.getByRole('button', { name: 'Browser origin differs (16)' }).click()
+  await expect(relay.getByRole('table').locator('tbody tr[data-origin="mismatch"]')).toHaveCount(16)
+  await relay.getByRole('button', { name: 'All endpoints (47)' }).click()
+  // Hosts entries: one block per client profile, usable by readers and operators.
+  for (const [width, theme] of [[375, 'light'], [1280, 'dark']] as const) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.getByRole('combobox', { name: 'Appearance' }).click()
+    await page.getByRole('option', { name: new RegExp(theme, 'i') }).click()
+    await relay.getByRole('button', { name: 'Hosts entries for example-relay' }).click()
+    const hosts = page.getByRole('dialog', { name: 'Hosts entries for example-relay' })
+    const block = await hosts.getByLabel('Hosts block for client').inputValue()
+    expect(block.split('\n').filter(line => /^127\.77\.\d+\.\d+ svc-\d\d\.example\.test$/.test(line))).toHaveLength(16)
+    expect(block.startsWith('# >>> azbridge client >>>\n')).toBe(true)
+    await expect(hosts.getByRole('button', { name: 'Copy hosts block for client' })).toHaveCSS('border-radius', '0px')
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    if (width === 1280) {
+      const [download] = await Promise.all([page.waitForEvent('download'), hosts.getByRole('button', { name: 'Download hosts block for client' }).click()])
+      expect(download.suggestedFilename()).toBe('azbridge-hosts-client.txt')
+      expect(await readFile((await download.path())!, 'utf8')).toBe(block)
+    }
+    await hosts.getByRole('button', { name: 'Close' }).click()
+  }
+  // Canonical origin: move two listeners to 443 in a new client draft; hostnames and PortNames stay.
+  await relay.getByRole('button', { name: 'Reconcile example-relay' }).click()
+  const canonical = page.getByRole('dialog', { name: 'Reconcile example-relay' })
+  await expect(canonical.getByLabel('Listener port for service-01')).toHaveValue('443')
+  await canonical.getByRole('checkbox', { name: 'Use canonical port for service-01' }).check()
+  await canonical.getByRole('checkbox', { name: 'Use canonical port for service-02' }).check()
+  await canonical.getByRole('button', { name: 'Save draft revisions' }).click()
+  await expect(canonical).toContainText('Saved draft revision 2 with 2 change(s). Not published.')
+  await expect(canonical).toContainText('apply the hosts entries on each client machine')
+  await canonical.getByRole('button', { name: 'Close' }).click()
+  await expect(relay.getByRole('button', { name: 'Browser origin differs (14)' })).toBeVisible()
+  const clientDraft = state.revisions.get(clientId)![1].yaml
+  expect(clientDraft).toContain('BindAddress: svc-01.example.test\n    BindPort: 443\n    PortName: service-01')
+  expect(clientDraft).toContain('# Disabled entries keep their explanations')
+  expect(state.revisions.get(serverId)).toHaveLength(2)
   expect(state.profiles.slice(1).every(profile => profile.currentRevision === null)).toBe(true)
   expect(state.errors).toEqual([])
   expect(state.external).toEqual([])

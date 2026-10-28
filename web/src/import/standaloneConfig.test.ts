@@ -37,6 +37,8 @@ describe('standalone conversion', () => {
     expect(map.endpoints.filter(item => item.hints.some(hint => hint.includes('reuses')))).toHaveLength(1)
     expect(map.endpoints.find(item => item.portName === 'service-10')?.hints.join(' ')).toContain('Possible rename: server / service-10-legacy (same target host)')
     expect(map.categories).toEqual({ complete: 4, partial: 0, renamed: 2, clientDisabled: 7, newClient: 13, orphanServer: 0, httpDirect: 0, disabled: 8 })
+    // Synthetic listeners use unique 443xx ports while destinations use 443, like the real files.
+    expect(map.originMismatches).toBe(3)
     expect(map.diagnosis).toBe('The server configuration appears to match an older client layout: 7 destinations wait for commented-out client entries; 1 pair was likely renamed on one side; 13 client listeners have no server destination.')
     expect(map.endpoints.find(item => item.portName === 'service-10')?.counterpart).toBe('1/remote-0-7')
     expect(map.endpoints.find(item => item.portName === 'legacy-17' && !item.disabled)?.counterpart).toMatch(/^0\/disabled-/)

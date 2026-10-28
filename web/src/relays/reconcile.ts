@@ -1,6 +1,7 @@
 import type { RelayMapEndpoint, RelayMapProfile } from '../api/generated'
 import { addBinding, parseProfile, updateBinding, type Binding, type BindingDraft } from '../designer/profileModel'
 import { meaningfulHost, sameTargetHost, type MappedEndpoint, type MappedRelay } from './relayMap'
+import { isAliasableHost, normalizeHostname } from './loopback'
 
 export interface AddProposal {
   id: string
@@ -14,17 +15,22 @@ export interface AddProposal {
   manualReason?: string
 }
 export interface RenameProposal { id: string; client: MappedEndpoint; server: MappedEndpoint }
+/** Move a hostname listener to its destination's port (canonical browser origin). */
+export interface PortProposal { id: string; listener: MappedEndpoint; port: number | null; reason: 'mismatch' | 'new' }
 export interface ReconciliationPlan {
   adds: AddProposal[]
   renames: RenameProposal[]
+  ports: PortProposal[]
   /** Profiles that already provide destinations on this relay. */
   serverProfiles: RelayMapProfile[]
 }
 export type RenameDirection = 'skip' | 'server' | 'client'
 
+type BindingRef = Pick<RelayMapEndpoint, 'id' | 'direction' | 'relayName' | 'port' | 'portName' | 'disabled'> & { host?: string | null }
 export type Change =
   | { kind: 'add'; relay: string; host: string; port: number; portName: string; protocol: 'TCP' | 'UDP' }
-  | { kind: 'rename'; endpoint: Pick<RelayMapEndpoint, 'id' | 'direction' | 'relayName' | 'port' | 'portName' | 'disabled'>; portName: string }
+  | { kind: 'rename'; endpoint: BindingRef; portName: string }
+  | { kind: 'port'; endpoint: BindingRef; port: number }
 
 function mode(values: readonly number[]): number | null {
   const counts = new Map<number, number>()
@@ -64,35 +70,53 @@ export function planReconciliation(relay: MappedRelay): ReconciliationPlan {
   }
   const serverProfiles = [...new Map(destinations.map(endpoint => [endpoint.source.profile.id, endpoint.source])).values()]
     .sort((a, b) => a.profile.name.localeCompare(b.profile.name))
-  return { adds, renames, serverProfiles }
+  const ports: PortProposal[] = []
+  for (const listener of relay.endpoints) {
+    if (listener.disabled || listener.direction !== 'listener' || listener.protocol !== 'tcp' || !isAliasableHost(listener.host)) continue
+    if (listener.originMismatch) ports.push({ id: `port:${listener.key}`, listener, port: listener.originMismatch.port, reason: 'mismatch' })
+    else if (listener.category === 'newClient' && port !== null && port !== listener.port) ports.push({ id: `port:${listener.key}`, listener, port, reason: 'new' })
+  }
+  return { adds, renames, ports, serverProfiles }
 }
 
 const effectiveName = (binding: Binding) => binding.portName || (binding.protocol === 'Unix socket'
   ? binding.direction === 'LocalForward' ? 'sock' : '0'
   : binding.protocol === 'UDP' ? `${binding.port}U` : String(binding.port))
 
-function position(endpoint: Extract<Change, { kind: 'rename' }>['endpoint']) {
+function position(endpoint: BindingRef) {
   const id = /^(local|remote)-(\d+)-(\d+)$/.exec(endpoint.id)
-  if (!id || endpoint.disabled) throw new Error('Only active bindings can be renamed.')
+  if (!id || endpoint.disabled) throw new Error('Only active bindings can be changed.')
   return { direction: id[1] === 'local' ? 'LocalForward' as const : 'RemoteForward' as const, group: Number(id[2]), index: Number(id[3]) }
 }
 // Appends never shift existing bindings: shorthand converts in place to Bindings[0] and new forwards go last.
 const at = (bindings: readonly Binding[], place: ReturnType<typeof position>) =>
   bindings.filter(item => item.direction === place.direction && item.forwardIndex === place.group)[place.index]
+const stale = () => new Error('A binding changed since this review. Review again before saving.')
 
 /** Apply changes with the Designer's comment-preserving edits. Throws without partial results. */
 export function applyToYaml(yaml: string, changes: readonly Change[], ready: readonly string[]): string {
   const parsed = parseProfile(yaml, ready)
   if (parsed.readOnlyReason) throw new Error('This revision cannot be edited automatically. Fix it in the profile editor first.')
   let result = yaml
-  const ordered = [...changes.filter(change => change.kind === 'rename'), ...changes.filter(change => change.kind === 'add')]
+  const ordered = (['rename', 'port', 'add'] as const).flatMap(kind => changes.filter(change => change.kind === kind))
   for (const change of ordered) {
     const bindings = parseProfile(result, ready).model.bindings
+    if (change.kind === 'port') {
+      const current = at(bindings, position(change.endpoint))
+      if (!current || current.direction !== 'LocalForward' || current.relay !== change.endpoint.relayName || current.port !== change.endpoint.port ||
+        normalizeHostname(current.host) !== normalizeHostname(change.endpoint.host ?? '')) throw stale()
+      if (!Number.isInteger(change.port) || change.port < 1 || change.port > 65535) throw new Error(`Enter a listener port from 1 to 65535 for ${current.host}.`)
+      if (bindings.some(item => item !== current && item.direction === 'LocalForward' && (item.protocol === 'UDP') === (current.protocol === 'UDP') &&
+        normalizeHostname(item.host) === normalizeHostname(current.host) && item.port === change.port)) {
+        throw new Error(`Another listener already uses ${current.host}:${change.port}.`)
+      }
+      // Keep the PortName the server expects even when it was the default port number.
+      result = updateBinding(result, current.id, { ...current, port: change.port, portName: effectiveName(current) }, ready)
+      continue
+    }
     if (change.kind === 'rename') {
       const current = at(bindings, position(change.endpoint))
-      if (!current || current.relay !== change.endpoint.relayName || current.port !== change.endpoint.port || effectiveName(current) !== change.endpoint.portName) {
-        throw new Error('A binding changed since this review. Review again before saving.')
-      }
+      if (!current || current.relay !== change.endpoint.relayName || current.port !== change.endpoint.port || effectiveName(current) !== change.endpoint.portName) throw stale()
       if (current.direction === 'RemoteForward' && bindings.some(item => item !== current && item.direction === 'RemoteForward' && item.forwardIndex === current.forwardIndex && effectiveName(item) === change.portName)) {
         throw new Error(`PortName ${change.portName} already exists in this server group.`)
       }
