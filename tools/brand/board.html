@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>azbridge / Brand directions</title>
+<script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("scoutTheme");
+    const theme =
+      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef;
+  --cp-bg-elevated: #fcfbf8;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede;
+  --cp-border-strong: #919191;
+  --cp-text: #242424;
+  --cp-text-muted: #5c5c5c;
+  --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b;
+  --cp-accent-hover: #9a1a41;
+  --cp-accent-soft: rgba(177, 31, 75, 0.08);
+  --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #f59e0b;
+  --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+  --cp-overlay: rgba(255, 255, 255, 0.8);
+  --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.55);
+  --cp-highlight: rgba(177, 31, 75, 0.12);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a;
+  --cp-bg-elevated: #343231;
+  --cp-surface: #292929;
+  --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747;
+  --cp-border-strong: #5f5f5f;
+  --cp-text: #dedede;
+  --cp-text-muted: #919191;
+  --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1;
+  --cp-accent-hover: #fb7b91;
+  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --cp-overlay: rgba(41, 41, 41, 0.88);
+  --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.04);
+  --cp-highlight: rgba(253, 142, 161, 0.12);
+}
+/* EMBEDDED_FONTS */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--cp-bg); color: var(--cp-text); font: 16px/1.5 "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; }
+header, main, footer { width: min(1400px, 100%); margin: auto; padding: 32px; }
+header { display: flex; justify-content: space-between; align-items: start; gap: 24px; }
+.eyebrow { text-transform: uppercase; letter-spacing: .15em; font-size: 12px; font-weight: 700; color: var(--cp-accent); }
+h1 { font-size: clamp(36px, 5vw, 64px); letter-spacing: -.05em; line-height: 1.1; margin: 12px 0; }
+h2 { font-size: 32px; letter-spacing: -.03em; margin: 0 0 12px; }
+h3 { font-size: 18px; margin: 0; }
+p { max-width: 80ch; }
+.muted, small { color: var(--cp-text-muted); }
+.toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+button, select { color: var(--cp-text); background: var(--cp-surface); border: 1px solid var(--cp-border-strong); border-radius: 10px; font: inherit; padding: 8px 16px; cursor: pointer; }
+button:hover { border-color: var(--cp-accent); }
+button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--cp-accent); outline-offset: 3px; }
+button[aria-pressed="true"] { color: var(--cp-accent); background: var(--cp-accent-soft); border-color: var(--cp-accent); }
+.notice { padding: 16px 20px; border-left: 3px solid var(--cp-accent); background: var(--cp-surface); margin: 20px 0 32px; }
+section { margin-bottom: 56px; }
+.direction-head { display: flex; flex-wrap: wrap; gap: 24px; align-items: start; margin-bottom: 24px; }
+.direction-copy { flex: 1 1 500px; }
+.palette { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; }
+.palette svg { display: block; border-radius: 8px; border: 1px solid var(--cp-border); }
+.models { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.model { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 16px; overflow: hidden; min-width: 0; }
+.model-head { padding: 16px 20px; border-bottom: 1px solid var(--cp-border); }
+.artwork { display: block; padding: 0; border: 0; border-radius: 0; width: 100%; background: var(--cp-surface); }
+.artwork img { display: block; width: 100%; height: auto; }
+.artwork.logo img { aspect-ratio: 1; object-fit: contain; }
+.artwork.hero img { aspect-ratio: 3/2; object-fit: contain; }
+.caption { padding: 8px 20px; margin: 0; font-size: 12px; color: var(--cp-text-muted); border-top: 1px solid var(--cp-border); }
+.choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.specimen, .tagline { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 16px; padding: 20px; }
+.wordmark { font-size: 48px; letter-spacing: -.04em; line-height: 1.3; margin: 12px 0; }
+.taglines { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tagline strong { display: block; margin-bottom: 4px; }
+code { font-family: Consolas, "Courier New", Courier, monospace; overflow-wrap: anywhere; }
+a { color: var(--cp-link); }
+details { padding: 16px 0; border-bottom: 1px solid var(--cp-border); }
+summary { cursor: pointer; font-weight: 600; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--cp-text-muted); font-size: 13px; }
+dialog { width: min(1200px, 95vw); max-height: 94vh; padding: 16px; border: 1px solid var(--cp-border-strong); border-radius: 16px; background: var(--cp-surface); color: var(--cp-text); }
+dialog::backdrop { background: var(--cp-overlay); }
+dialog img { display: block; max-width: 100%; max-height: 75vh; margin: 12px auto; }
+.review-panel { position: sticky; bottom: 0; padding: 16px; background: var(--cp-panel-strong); border: 1px solid var(--cp-border); border-radius: 16px; }
+.review-panel label { display: grid; gap: 4px; font-size: 13px; flex: 1 1 180px; }
+#selection { padding-top: 8px; font-size: 13px; }
+[hidden] { display: none !important; }
+@media (max-width: 800px) {
+  header, main, footer { padding: 20px; }
+  .models, .choices, .taglines { grid-template-columns: 1fr; }
+  .review-panel { position: static; }
+  header { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="eyebrow">azbridge / Direction review / Gate 1</div><h1>Make the connection.</h1>
+    <p class="muted">Three directions. Three Foundry image models. One intentional identity.</p></div>
+  <button id="theme" type="button">Switch theme</button>
+</header>
+<main>
+  <div class="notice"><strong>Concepts, not final logos.</strong> All 18 images below were generated through your existing Azure Foundry deployments.
+    The chosen mark will be redrawn as SVG; typography and tagline will be composed separately.
+    Native Fluent UI colors and square product controls stay unchanged. This review board uses its own Clawpilot review theme.</div>
+  <div class="toolbar" id="filters" aria-label="Filter image model"></div>
+  <div id="directions"></div>
+  <section><div class="eyebrow">Wordmark only / UI typography unchanged</div><h2>Choose a voice in type.</h2>
+    <p class="muted">Actual embedded OFL font specimens, not model-generated lettering. Final wordmark outlines will not require a web font.</p>
+    <div id="fonts" class="choices"></div>
+  </section>
+  <section><div class="eyebrow">Written by your GPT-6.1 deployment</div><h2>Ten ways to say it.</h2><div id="taglines" class="taglines"></div></section>
+  <section><h2>Principles and provenance</h2><ul id="voice"></ul>
+    <p class="muted">Original generated PNGs, WebP previews, full prompts, dates, deployment versions and SHA-256 hashes are retained alongside this board.
+      These are text-to-image interpretations without reference-image matching. Final asset review follows after choosing a direction.</p>
+    <details><summary>Generation prompts and provenance</summary><pre id="provenance"></pre></details>
+    <details><summary>Embedded font licenses</summary><div id="licenses"></div></details>
+  </section>
+  <div class="review-panel">
+    <div class="toolbar">
+      <label>Direction<select id="pick-direction"></select></label>
+      <label>Artwork model<select id="pick-model"></select></label>
+      <label>Tagline<select id="pick-tagline"></select></label>
+      <label>Wordmark font<select id="pick-font"></select></label>
+    </div>
+    <p id="selection" role="status"></p>
+    <small>These controls only preview a preference. Confirm your choices in the assistant's Gate 1 form.</small>
+  </div>
+</main>
+<footer><small>Local, self-contained review board. No analytics, remote fonts, CDN, cookies or model calls from this page.</small></footer>
+<dialog id="zoom"><button type="button" id="close">Close image</button><h3 id="zoom-title"></h3><img id="zoom-image" alt=""></dialog>
+<script id="review-data" type="application/json">EMBEDDED_REVIEW_DATA</script>
+<script>
+const data = JSON.parse(document.getElementById('review-data').textContent);
+const escape = value => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const image = (entry, kind) => `<button type="button" class="artwork ${kind}" data-image="${escape(entry.preview)}" aria-label="Enlarge ${kind} by ${escape(entry.deployment)}"><img src="${data.images[entry.preview]}" alt="${escape(entry.directionName)} ${kind} concept by ${escape(entry.deployment)}"></button><p class="caption">${kind === 'logo' ? 'Logo mark / SVG interpretation pending' : 'Hero illustration / Generated concept'} &middot; ${entry.dimensions.join(' × ')}</p>`;
+document.getElementById('directions').innerHTML = data.brief.directions.map((direction, index) => `
+  <section><div class="direction-head"><div class="direction-copy"><div class="eyebrow">Direction ${String(index+1).padStart(2,'0')}</div>
+  <h2>${escape(direction.name)}</h2><p>${escape(direction.rationale)}</p><p class="muted">${escape(direction.motif)}</p></div>
+  <div class="palette">${direction.palette.map(color => `<div><svg width="56" height="40" aria-label="${escape(color.name)}"><rect width="56" height="40" fill="${color.hex}"></rect></svg>${escape(color.name)}<br><code>${color.hex}</code></div>`).join('')}</div></div>
+  <div class="models">${data.models.map(model => {
+    const entries = data.provenance.filter(entry => entry.asset.startsWith(direction.id+'--') && entry.deployment === model);
+    return `<article class="model" data-model="${escape(model)}"><div class="model-head"><h3>${escape(model)}</h3><small>Same brief, independent model interpretation</small></div>${entries.map(entry => image(entry, entry.asset.endsWith('--logo.png') ? 'logo' : 'hero')).join('')}</article>`;
+  }).join('')}</div></section>`).join('');
+document.getElementById('fonts').innerHTML = data.fonts.map(font => `<article class="specimen"><h3>${escape(font.name)}</h3><div class="wordmark" style="font-family:'${escape(font.name)}';font-weight:600">azbridge</div><p>${escape(font.note)}</p><small>SIL Open Font License 1.1 &middot; embedded specimen</small></article>`).join('');
+document.getElementById('taglines').innerHTML = data.brief.taglines.map((tagline,index) => `<article class="tagline"><strong>${index+1}. ${escape(tagline.text)}</strong><small>${escape(tagline.rationale)}</small></article>`).join('');
+document.getElementById('voice').innerHTML = data.brief.voice.map(line => `<li>${escape(line)}</li>`).join('');
+document.getElementById('provenance').textContent = JSON.stringify(data.provenance,null,2);
+document.getElementById('licenses').innerHTML = data.fonts.map(font => `<h3>${escape(font.name)}</h3><pre>${escape(font.license)}</pre>`).join('');
+const filters = document.getElementById('filters');
+for (const model of ['All models', ...data.models]) {
+  const button = document.createElement('button');
+  button.type = 'button'; button.textContent = model; button.setAttribute('aria-pressed', String(model === 'All models'));
+  button.addEventListener('click', () => {
+    for (const candidate of filters.children) candidate.setAttribute('aria-pressed', String(candidate === button));
+    for (const card of document.querySelectorAll('[data-model]')) card.hidden = model !== 'All models' && card.dataset.model !== model;
+  }); filters.append(button);
+}
+const dialog = document.getElementById('zoom');
+document.querySelectorAll('[data-image]').forEach(button => button.addEventListener('click', () => {
+  const entry = data.provenance.find(item => item.preview === button.dataset.image);
+  document.getElementById('zoom-image').src = data.images[entry.preview];
+  document.getElementById('zoom-image').alt = button.querySelector('img').alt;
+  document.getElementById('zoom-title').textContent = button.querySelector('img').alt;
+  dialog.showModal();
+}));
+document.getElementById('close').addEventListener('click', () => dialog.close());
+document.getElementById('theme').addEventListener('click', () => {
+  document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+});
+const choices = {
+  direction: data.brief.directions.map(item => item.name),
+  model: data.models,
+  tagline: data.brief.taglines.map(item => item.text),
+  font: data.fonts.map(item => item.name),
+};
+function selection() {
+  document.getElementById('selection').textContent = Object.entries(choices).map(([name]) => `${name}: ${document.getElementById('pick-'+name).value}`).join(' / ');
+}
+for (const [name, options] of Object.entries(choices)) {
+  const select = document.getElementById('pick-'+name);
+  options.forEach(label => { const option = document.createElement('option'); option.textContent = label; select.append(option); });
+  select.addEventListener('change', selection);
+}
+selection();
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+text_deployment: gpt-6.1-sol
+models:
+  - deployment: gpt-image-2.5-flare
+    version: "2026-09-08"
+    provider: openai
+  - deployment: MAI-Image-2.6
+    version: "2026-07-31"
+    provider: mai
+  - deployment: FLUX.2-pro
+    version: "1"
+    provider: flux
+brief: |
+  Create a considered, distinctive visual identity for azbridge, an open-source
+  Rust tool and browser control plane for Azure Relay Hybrid Connections.
+  It links TCP, UDP, HTTP and Unix socket services using outbound HTTPS,
+  without VPNs or opening inbound firewall ports. Operators manage workspaces,
+  Relay connections, forwarding profiles, and enrolled gateways.
+
+  Positioning: precise, approachable infrastructure; connections with intent;
+  straightforward engineering rather than magic or AI hype.
+  Keep the product name azbridge and descriptor "Relay control plane".
+  Do not imply Microsoft endorsement or promise absolute security.
+  Native Fluent blue/neutral UI colors and square controls stay unchanged.
+  Artwork may use compatible blue/ink/neutral tones plus a restrained accent.
+  No Microsoft/Azure logos, copied trademarks, people, mascots, words or letters
+  in generated imagery. No globes, padlocks, neon circuit brains, purple
+  gradients, generic cloud outlines or gratuitous glassmorphism.
+
+  Propose exactly three genuinely different directions, not palette variants:
+  one reduced architectural/geometric mark, one spatial/isometric system,
+  one flat editorial/abstract symbol system. Each needs a simple recognizable
+  mark that could be redrawn in SVG and survive a 16px favicon.
+  Image prompts must specify one finished composition, NOT a contact sheet,
+  layout mockup, presentation slide, mood board or multiple logo alternatives.
+  Hero prompts should be landscape editorial illustrations with abundant
+  negative space and one focal concept, not a diagram of the actual UI.
+  Logo prompts should be a centered mark on clean white, no lettering,
+  no text, no shadows, no 3D mockup. Keep the mark inside generous margins.
+
+  Return only a JSON object with these keys:
+  "directions": an array of exactly 3 objects, each with:
+    "id": a short lowercase kebab-case identifier,
+    "name": short art-direction name,
+    "rationale": two sentences explaining the concept and relevance,
+    "motif": the precise visual grammar shared by mark and illustrations,
+    "palette": array of 4 objects with "name" and "hex" (#RRGGBB),
+    "logo_prompt": a complete standalone image-generation prompt,
+    "hero_prompt": a complete standalone image-generation prompt.
+  "taglines": exactly 10 objects with "text" (2-7 words) and "rationale".
+  "voice": three concise voice principles.
+image_constraints: |
+  Original artwork for azbridge. No text, lettering, numbers, watermarks,
+  signatures, existing logos, Microsoft/Azure branding, people or faces.
+  Do not depict locks or VPN shields. Make a single composed artwork,
+  not a sheet of variations or brand presentation. Use only the direction's
+  supplied color palette and neutral background; crisp edges and deliberate
+  negative space. The mark must be simple enough to hand-redraw as SVG.

@@ -1,0 +1,67 @@
+direction: Offset Span
+deployment: MAI-Image-2.6
+version: "2026-07-31"
+provider: mai
+tagline: Outbound paths. Clear control.
+wordmark_font: Space Grotesk
+shared: |
+  One finished editorial illustration for azbridge, in the approved Offset Span
+  identity. Architectural geometry only: thick opposing right-angle brackets,
+  square ends, orthogonal cuts, consistent proportions, an open passage.
+  Restrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,
+  and at most one tiny Signal Ochre #B88628 rectangular inset.
+  Reduced flat architectural forms with only very subtle depth. Crisp edges,
+  deliberate negative space, no texture, no gradients, no decorative complexity.
+  No text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,
+  Microsoft or Azure branding, people, clouds, padlocks, shields or circuit boards.
+  Do not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.
+themes:
+  light: |
+    Light variant. Uniform Chalk #F3F5F7 background, blending smoothly at all
+    four edges. Shapes use Relay Blue and Structural Ink. No visible frame.
+  dark: |
+    Dark variant. Uniform charcoal #1F1F1F background, blending smoothly at all
+    four edges. Shapes use Relay Blue #0078D4, pale Chalk #F3F5F7 and muted
+    Structural Ink #182B3A. Keep good contrast and quiet, unlit negative space.
+assets:
+  hero:
+    width: 1536
+    height: 1024
+    prompt: |
+      A landscape composition. Two monumental opposing right-angle thresholds
+      occupy the right half and frame one open horizontal passage. The left
+      half is abundant empty background for separately composed product copy.
+      The structure feels precise, calm and approachable. One tiny ochre inset
+      marks alignment at the corridor edge. Keep all structures inside generous
+      margins; no cropping. This is the signature azbridge sign-in illustration.
+  connections:
+    width: 1024
+    height: 1024
+    prompt: |
+      A compact centered vignette occupying the middle 60 percent of a square.
+      Two thick opposing right-angle brackets align across a clear short
+      horizontal gap, expressing two services ready to connect. One bracket is
+      Relay Blue and the other is a contrasting neutral. One tiny ochre inset
+      at the gap. Flat and exceptionally simple, legible at 160 pixels wide.
+      Equal generous blank margins on all sides, no cropping or ground shadow.
+  profiles:
+    width: 1024
+    height: 1024
+    prompt: |
+      A compact centered vignette occupying the middle 60 percent of a square.
+      Three short horizontal structural slabs step into alignment between one
+      opposing bracket pair, like a deliberate path being configured. Exactly
+      three slabs, one Relay Blue, others contrasting neutrals; one tiny ochre
+      alignment inset. Not paper, files, text, a diagram or UI. Flat, exceptionally
+      simple, readable at 160 pixels, generous margins, no ground shadow.
+  gateways:
+    width: 1024
+    height: 1024
+    prompt: |
+      A compact centered vignette occupying the middle 60 percent of a square.
+      One open architectural portal made from two offset thick right-angle
+      brackets, plus a small square block resting just before its open passage.
+      The block suggests an enrolled host ready to enter, not a lock or a server.
+      Relay Blue portal, contrasting neutral block, one tiny ochre alignment
+      inset. Flat, exceptionally simple at 160 pixels, generous blank margins,
+      no cropping or ground shadow.

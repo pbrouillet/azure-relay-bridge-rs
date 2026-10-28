@@ -1,0 +1,420 @@
+{
+  "brand": "azbridge",
+  "direction": "Offset Span",
+  "tagline": "Outbound paths. Clear control.",
+  "descriptor": "Relay control plane",
+  "wordmark": {
+    "family": "Space Grotesk",
+    "weight": 600
+  },
+  "createdAt": "2026-10-19T12:34:05.477118+00:00",
+  "logo": {
+    "method": "Hand-drawn original SVG bracket geometry; font glyphs converted to paths with FontTools",
+    "sourceGeneration": {
+      "asset": "offset-span--MAI-Image-2.6--logo.png",
+      "preview": "offset-span--MAI-Image-2.6--logo.webp",
+      "deployment": "MAI-Image-2.6",
+      "modelVersion": "2026-07-31",
+      "createdAt": "2026-10-19T12:09:07.310925+00:00",
+      "prompt": "Create one finished, centered geometric brand mark on clean white for an infrastructure tool. Construct exactly two thick opposing right-angle brackets with square ends: an upper-left bracket in deep ink #182B3A and a lower-right bracket in blue #0078D4, offset diagonally around a clear horizontal passage. Use a compact, balanced silhouette, equal stroke weights, simple orthogonal geometry, and broad negative space so the mark can be redrawn as two SVG paths and remain recognizable at 16px. Keep the entire mark inside generous white margins. Flat solid fills only. No lettering, text, words, letters, numbers, shadows, gradients, textures, 3D mockups, additional symbols, Microsoft or Azure logos, copied trademarks, people, mascots, globes, padlocks, clouds, or circuit imagery. Show one mark only, not alternatives, a contact sheet, layout mockup, or presentation slide.\n\nShared direction: Two thick, opposing right-angle brackets with square ends, offset diagonally around an uninterrupted horizontal passage; consistent stroke weight, orthogonal cuts, and generous open space. The favicon uses only the bracket pair, while illustrations enlarge the same geometry into architectural thresholds..\n\nPalette: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7, Signal Ochre #B88628\n\nOriginal artwork for azbridge. No text, lettering, numbers, watermarks,\nsignatures, existing logos, Microsoft/Azure branding, people or faces.\nDo not depict locks or VPN shields. Make a single composed artwork,\nnot a sheet of variations or brand presentation. Use only the direction's\nsupplied color palette and neutral background; crisp edges and deliberate\nnegative space. The mark must be simple enough to hand-redraw as SVG.\n",
+      "parameters": {
+        "model": "MAI-Image-2.6",
+        "width": 1024,
+        "height": 1024
+      },
+      "sha256": "c65be94bb4772e5c34ebc2c6753b8f890734740b609d8a02dd72dfe96e8ff4a0",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "postProcessing": "Original PNG retained; WebP review copy quality=88 method=6",
+      "revisedPrompt": null
+    }
+  },
+  "strategyGeneration": {
+    "asset": "concepts.json",
+    "deployment": "gpt-6.1-sol",
+    "model": "gpt-6.1-sol-2026-09-29",
+    "createdAt": "2026-10-19T12:07:33.195980+00:00",
+    "prompt": "Create a considered, distinctive visual identity for azbridge, an open-source\nRust tool and browser control plane for Azure Relay Hybrid Connections.\nIt links TCP, UDP, HTTP and Unix socket services using outbound HTTPS,\nwithout VPNs or opening inbound firewall ports. Operators manage workspaces,\nRelay connections, forwarding profiles, and enrolled gateways.\n\nPositioning: precise, approachable infrastructure; connections with intent;\nstraightforward engineering rather than magic or AI hype.\nKeep the product name azbridge and descriptor \"Relay control plane\".\nDo not imply Microsoft endorsement or promise absolute security.\nNative Fluent blue/neutral UI colors and square controls stay unchanged.\nArtwork may use compatible blue/ink/neutral tones plus a restrained accent.\nNo Microsoft/Azure logos, copied trademarks, people, mascots, words or letters\nin generated imagery. No globes, padlocks, neon circuit brains, purple\ngradients, generic cloud outlines or gratuitous glassmorphism.\n\nPropose exactly three genuinely different directions, not palette variants:\none reduced architectural/geometric mark, one spatial/isometric system,\none flat editorial/abstract symbol system. Each needs a simple recognizable\nmark that could be redrawn in SVG and survive a 16px favicon.\nImage prompts must specify one finished composition, NOT a contact sheet,\nlayout mockup, presentation slide, mood board or multiple logo alternatives.\nHero prompts should be landscape editorial illustrations with abundant\nnegative space and one focal concept, not a diagram of the actual UI.\nLogo prompts should be a centered mark on clean white, no lettering,\nno text, no shadows, no 3D mockup. Keep the mark inside generous margins.\n\nReturn only a JSON object with these keys:\n\"directions\": an array of exactly 3 objects, each with:\n  \"id\": a short lowercase kebab-case identifier,\n  \"name\": short art-direction name,\n  \"rationale\": two sentences explaining the concept and relevance,\n  \"motif\": the precise visual grammar shared by mark and illustrations,\n  \"palette\": array of 4 objects with \"name\" and \"hex\" (#RRGGBB),\n  \"logo_prompt\": a complete standalone image-generation prompt,\n  \"hero_prompt\": a complete standalone image-generation prompt.\n\"taglines\": exactly 10 objects with \"text\" (2-7 words) and \"rationale\".\n\"voice\": three concise voice principles.\n",
+    "parameters": {
+      "model": "gpt-6.1-sol",
+      "response_format": {
+        "type": "json_object"
+      },
+      "max_completion_tokens": 12000,
+      "reasoning_effort": "low"
+    },
+    "usage": {
+      "completion_tokens": 2373,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 26,
+        "engine_ttft_ms": 685,
+        "engine_ttlt_ms": 62116,
+        "pre_inference_ms": 128,
+        "service_tbt_ms": 26,
+        "service_ttft_ms": 1225,
+        "service_ttlt_ms": 62634,
+        "user_visible_ttft_ms": 1097
+      },
+      "prompt_tokens": 485,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 2858
+    },
+    "sha256": "b90724b4a0b91e125b0bb0126a313e70df5005f8b20bc1b7caec0471dad501a9",
+    "postProcessing": "JSON validation and indentation only"
+  },
+  "fonts": [
+    {
+      "source": "https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/spacegrotesk/SpaceGrotesk%5Bwght%5D.ttf",
+      "sha256": "ACAD6DE1FC93436F5C0F1F4137751EF04F1AEA3063E7036535970FFCFBD79F72",
+      "asset": "spacegrotesk.ttf"
+    },
+    {
+      "source": "https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/spacegrotesk/OFL.txt",
+      "sha256": "564CE565C371C5E5BBF286006565A7C9AA55A9F56E7CA58D56E05D649DD61A72",
+      "asset": "spacegrotesk-OFL.txt"
+    }
+  ],
+  "artwork": [
+    {
+      "deployment": "MAI-Image-2.6",
+      "modelVersion": "2026-07-31",
+      "direction": "Offset Span",
+      "createdAt": "2026-10-19T12:25:10.023921+00:00",
+      "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA landscape composition. Two monumental opposing right-angle thresholds\noccupy the right half and frame one open horizontal passage. The left\nhalf is abundant empty background for separately composed product copy.\nThe structure feels precise, calm and approachable. One tiny ochre inset\nmarks alignment at the corridor edge. Keep all structures inside generous\nmargins; no cropping. This is the signature azbridge sign-in illustration.\n\n\nLight variant. Uniform Chalk #F3F5F7 background, blending smoothly at all\nfour edges. Shapes use Relay Blue and Structural Ink. No visible frame.\n",
+      "parameters": {
+        "model": "MAI-Image-2.6",
+        "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA landscape composition. Two monumental opposing right-angle thresholds\noccupy the right half and frame one open horizontal passage. The left\nhalf is abundant empty background for separately composed product copy.\nThe structure feels precise, calm and approachable. One tiny ochre inset\nmarks alignment at the corridor edge. Keep all structures inside generous\nmargins; no cropping. This is the signature azbridge sign-in illustration.\n\n\nLight variant. Uniform Chalk #F3F5F7 background, blending smoothly at all\nfour edges. Shapes use Relay Blue and Structural Ink. No visible frame.\n",
+        "width": 1536,
+        "height": 1024
+      },
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "postProcessing": "Resized to 1200x800; WebP quality=88 method=6",
+      "sourceAsset": "hero-light.png",
+      "sourceSha256": "2d60a0da6c8af83b21ba21ed554897cdff277904874c36ee113bce8171e85adb",
+      "asset": "assets/hero-light.webp",
+      "sha256": "865f0914ea938432a103ceb5c484a8cbc69ba607af4a92cf23826a694ebd50e2"
+    },
+    {
+      "deployment": "MAI-Image-2.6",
+      "modelVersion": "2026-07-31",
+      "direction": "Offset Span",
+      "createdAt": "2026-10-19T12:25:40.362347+00:00",
+      "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA landscape composition. Two monumental opposing right-angle thresholds\noccupy the right half and frame one open horizontal passage. The left\nhalf is abundant empty background for separately composed product copy.\nThe structure feels precise, calm and approachable. One tiny ochre inset\nmarks alignment at the corridor edge. Keep all structures inside generous\nmargins; no cropping. This is the signature azbridge sign-in illustration.\n\n\nDark variant. Uniform charcoal #1F1F1F background, blending smoothly at all\nfour edges. Shapes use Relay Blue #0078D4, pale Chalk #F3F5F7 and muted\nStructural Ink #182B3A. Keep good contrast and quiet, unlit negative space.\n",
+      "parameters": {
+        "model": "MAI-Image-2.6",
+        "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA landscape composition. Two monumental opposing right-angle thresholds\noccupy the right half and frame one open horizontal passage. The left\nhalf is abundant empty background for separately composed product copy.\nThe structure feels precise, calm and approachable. One tiny ochre inset\nmarks alignment at the corridor edge. Keep all structures inside generous\nmargins; no cropping. This is the signature azbridge sign-in illustration.\n\n\nDark variant. Uniform charcoal #1F1F1F background, blending smoothly at all\nfour edges. Shapes use Relay Blue #0078D4, pale Chalk #F3F5F7 and muted\nStructural Ink #182B3A. Keep good contrast and quiet, unlit negative space.\n",
+        "width": 1536,
+        "height": 1024
+      },
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "postProcessing": "Resized to 1200x800; WebP quality=88 method=6",
+      "sourceAsset": "hero-dark.png",
+      "sourceSha256": "64c2b3b2eea850b11b719ee678dccd318dbc5558e8c533185c02c916ceb63dd1",
+      "asset": "assets/hero-dark.webp",
+      "sha256": "33dfc80a90792489a79f6b3af8cf32821278489bf4d73b8860cda1146bfdcc3c"
+    },
+    {
+      "deployment": "MAI-Image-2.6",
+      "modelVersion": "2026-07-31",
+      "direction": "Offset Span",
+      "createdAt": "2026-10-19T12:26:21.496792+00:00",
+      "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nTwo thick opposing right-angle brackets align across a clear short\nhorizontal gap, expressing two services ready to connect. One bracket is\nRelay Blue and the other is a contrasting neutral. One tiny ochre inset\nat the gap. Flat and exceptionally simple, legible at 160 pixels wide.\nEqual generous blank margins on all sides, no cropping or ground shadow.\n\n\nLight variant. Uniform Chalk #F3F5F7 background, blending smoothly at all\nfour edges. Shapes use Relay Blue and Structural Ink. No visible frame.\n",
+      "parameters": {
+        "model": "MAI-Image-2.6",
+        "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nTwo thick opposing right-angle brackets align across a clear short\nhorizontal gap, expressing two services ready to connect. One bracket is\nRelay Blue and the other is a contrasting neutral. One tiny ochre inset\nat the gap. Flat and exceptionally simple, legible at 160 pixels wide.\nEqual generous blank margins on all sides, no cropping or ground shadow.\n\n\nLight variant. Uniform Chalk #F3F5F7 background, blending smoothly at all\nfour edges. Shapes use Relay Blue and Structural Ink. No visible frame.\n",
+        "width": 1024,
+        "height": 1024
+      },
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "postProcessing": "Resized to 480x480; WebP quality=88 method=6",
+      "sourceAsset": "connections-light.png",
+      "sourceSha256": "01450d1c0652653f3ff29231f1345532e40d4ae11dfc0a13adb7046a6b4e5622",
+      "asset": "assets/connections-light.webp",
+      "sha256": "a8c5173db04649e4393113c9c318aef82599841db6cd2dad0f576ff3ab4a4ee7"
+    },
+    {
+      "deployment": "MAI-Image-2.6",
+      "modelVersion": "2026-07-31",
+      "direction": "Offset Span",
+      "createdAt": "2026-10-19T12:27:11.147506+00:00",
+      "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nTwo thick opposing right-angle brackets align across a clear short\nhorizontal gap, expressing two services ready to connect. One bracket is\nRelay Blue and the other is a contrasting neutral. One tiny ochre inset\nat the gap. Flat and exceptionally simple, legible at 160 pixels wide.\nEqual generous blank margins on all sides, no cropping or ground shadow.\n\n\nDark variant. Uniform charcoal #1F1F1F background, blending smoothly at all\nfour edges. Shapes use Relay Blue #0078D4, pale Chalk #F3F5F7 and muted\nStructural Ink #182B3A. Keep good contrast and quiet, unlit negative space.\n",
+      "parameters": {
+        "model": "MAI-Image-2.6",
+        "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nTwo thick opposing right-angle brackets align across a clear short\nhorizontal gap, expressing two services ready to connect. One bracket is\nRelay Blue and the other is a contrasting neutral. One tiny ochre inset\nat the gap. Flat and exceptionally simple, legible at 160 pixels wide.\nEqual generous blank margins on all sides, no cropping or ground shadow.\n\n\nDark variant. Uniform charcoal #1F1F1F background, blending smoothly at all\nfour edges. Shapes use Relay Blue #0078D4, pale Chalk #F3F5F7 and muted\nStructural Ink #182B3A. Keep good contrast and quiet, unlit negative space.\n",
+        "width": 1024,
+        "height": 1024
+      },
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "postProcessing": "Resized to 480x480; WebP quality=88 method=6",
+      "sourceAsset": "connections-dark.png",
+      "sourceSha256": "d2e36fc0e027ee92eff63988ff892cf551fcf686f82b7533c1aa04d834485fe8",
+      "asset": "assets/connections-dark.webp",
+      "sha256": "00daa873aebeda317fe48e186f20ea44b2602ad91d7c086f2997139cef54fd58"
+    },
+    {
+      "deployment": "MAI-Image-2.6",
+      "modelVersion": "2026-07-31",
+      "direction": "Offset Span",
+      "createdAt": "2026-10-19T12:27:40.916989+00:00",
+      "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nThree short horizontal structural slabs step into alignment between one\nopposing bracket pair, like a deliberate path being configured. Exactly\nthree slabs, one Relay Blue, others contrasting neutrals; one tiny ochre\nalignment inset. Not paper, files, text, a diagram or UI. Flat, exceptionally\nsimple, readable at 160 pixels, generous margins, no ground shadow.\n\n\nLight variant. Uniform Chalk #F3F5F7 background, blending smoothly at all\nfour edges. Shapes use Relay Blue and Structural Ink. No visible frame.\n",
+      "parameters": {
+        "model": "MAI-Image-2.6",
+        "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nThree short horizontal structural slabs step into alignment between one\nopposing bracket pair, like a deliberate path being configured. Exactly\nthree slabs, one Relay Blue, others contrasting neutrals; one tiny ochre\nalignment inset. Not paper, files, text, a diagram or UI. Flat, exceptionally\nsimple, readable at 160 pixels, generous margins, no ground shadow.\n\n\nLight variant. Uniform Chalk #F3F5F7 background, blending smoothly at all\nfour edges. Shapes use Relay Blue and Structural Ink. No visible frame.\n",
+        "width": 1024,
+        "height": 1024
+      },
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "postProcessing": "Resized to 480x480; WebP quality=88 method=6",
+      "sourceAsset": "profiles-light.png",
+      "sourceSha256": "667a8e768bea783dd56309f37080bd680530b3abb402e74a93905d55d12a10f7",
+      "asset": "assets/profiles-light.webp",
+      "sha256": "29a3f3f1da2f231fc8a237cb0473f92b83cfd989f3dec6cb54d393575d2d4995"
+    },
+    {
+      "deployment": "MAI-Image-2.6",
+      "modelVersion": "2026-07-31",
+      "direction": "Offset Span",
+      "createdAt": "2026-10-19T12:28:10.324799+00:00",
+      "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nThree short horizontal structural slabs step into alignment between one\nopposing bracket pair, like a deliberate path being configured. Exactly\nthree slabs, one Relay Blue, others contrasting neutrals; one tiny ochre\nalignment inset. Not paper, files, text, a diagram or UI. Flat, exceptionally\nsimple, readable at 160 pixels, generous margins, no ground shadow.\n\n\nDark variant. Uniform charcoal #1F1F1F background, blending smoothly at all\nfour edges. Shapes use Relay Blue #0078D4, pale Chalk #F3F5F7 and muted\nStructural Ink #182B3A. Keep good contrast and quiet, unlit negative space.\n",
+      "parameters": {
+        "model": "MAI-Image-2.6",
+        "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nThree short horizontal structural slabs step into alignment between one\nopposing bracket pair, like a deliberate path being configured. Exactly\nthree slabs, one Relay Blue, others contrasting neutrals; one tiny ochre\nalignment inset. Not paper, files, text, a diagram or UI. Flat, exceptionally\nsimple, readable at 160 pixels, generous margins, no ground shadow.\n\n\nDark variant. Uniform charcoal #1F1F1F background, blending smoothly at all\nfour edges. Shapes use Relay Blue #0078D4, pale Chalk #F3F5F7 and muted\nStructural Ink #182B3A. Keep good contrast and quiet, unlit negative space.\n",
+        "width": 1024,
+        "height": 1024
+      },
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "postProcessing": "Resized to 480x480; WebP quality=88 method=6",
+      "sourceAsset": "profiles-dark.png",
+      "sourceSha256": "ebdb23f474fd98b0f981e003f27580034ab71a349bc33bcaed668062bca60ab1",
+      "asset": "assets/profiles-dark.webp",
+      "sha256": "ee69357985f35c97951f1f8816c58788f13fa0fafb7abf50d1b97c52b05b9877"
+    },
+    {
+      "deployment": "MAI-Image-2.6",
+      "modelVersion": "2026-07-31",
+      "direction": "Offset Span",
+      "createdAt": "2026-10-19T12:28:37.802495+00:00",
+      "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nOne open architectural portal made from two offset thick right-angle\nbrackets, plus a small square block resting just before its open passage.\nThe block suggests an enrolled host ready to enter, not a lock or a server.\nRelay Blue portal, contrasting neutral block, one tiny ochre alignment\ninset. Flat, exceptionally simple at 160 pixels, generous blank margins,\nno cropping or ground shadow.\n\n\nLight variant. Uniform Chalk #F3F5F7 background, blending smoothly at all\nfour edges. Shapes use Relay Blue and Structural Ink. No visible frame.\n",
+      "parameters": {
+        "model": "MAI-Image-2.6",
+        "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nOne open architectural portal made from two offset thick right-angle\nbrackets, plus a small square block resting just before its open passage.\nThe block suggests an enrolled host ready to enter, not a lock or a server.\nRelay Blue portal, contrasting neutral block, one tiny ochre alignment\ninset. Flat, exceptionally simple at 160 pixels, generous blank margins,\nno cropping or ground shadow.\n\n\nLight variant. Uniform Chalk #F3F5F7 background, blending smoothly at all\nfour edges. Shapes use Relay Blue and Structural Ink. No visible frame.\n",
+        "width": 1024,
+        "height": 1024
+      },
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "postProcessing": "Resized to 480x480; WebP quality=88 method=6",
+      "sourceAsset": "gateways-light.png",
+      "sourceSha256": "6bb3b68f40fe0548a38ea284a224bfc037f5153a0d8d27690b8efa06f0e562de",
+      "asset": "assets/gateways-light.webp",
+      "sha256": "1a67a0236539e453561c3fda79f009c9e02e325eb5b8b1c0f9baefd29e992421"
+    },
+    {
+      "deployment": "MAI-Image-2.6",
+      "modelVersion": "2026-07-31",
+      "direction": "Offset Span",
+      "createdAt": "2026-10-19T12:29:09.171753+00:00",
+      "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nOne open architectural portal made from two offset thick right-angle\nbrackets, plus a small square block resting just before its open passage.\nThe block suggests an enrolled host ready to enter, not a lock or a server.\nRelay Blue portal, contrasting neutral block, one tiny ochre alignment\ninset. Flat, exceptionally simple at 160 pixels, generous blank margins,\nno cropping or ground shadow.\n\n\nDark variant. Uniform charcoal #1F1F1F background, blending smoothly at all\nfour edges. Shapes use Relay Blue #0078D4, pale Chalk #F3F5F7 and muted\nStructural Ink #182B3A. Keep good contrast and quiet, unlit negative space.\n",
+      "parameters": {
+        "model": "MAI-Image-2.6",
+        "prompt": "One finished editorial illustration for azbridge, in the approved Offset Span\nidentity. Architectural geometry only: thick opposing right-angle brackets,\nsquare ends, orthogonal cuts, consistent proportions, an open passage.\nRestrained colors: Relay Blue #0078D4, Structural Ink #182B3A, Chalk #F3F5F7,\nand at most one tiny Signal Ochre #B88628 rectangular inset.\nReduced flat architectural forms with only very subtle depth. Crisp edges,\ndeliberate negative space, no texture, no gradients, no decorative complexity.\nNo text, letters, words, numbers, UI, arrows, logos, watermarks, signatures,\nMicrosoft or Azure branding, people, clouds, padlocks, shields or circuit boards.\nDo not create a diagram, a mockup, a presentation slide, or a sheet of alternatives.\n\n\nA compact centered vignette occupying the middle 60 percent of a square.\nOne open architectural portal made from two offset thick right-angle\nbrackets, plus a small square block resting just before its open passage.\nThe block suggests an enrolled host ready to enter, not a lock or a server.\nRelay Blue portal, contrasting neutral block, one tiny ochre alignment\ninset. Flat, exceptionally simple at 160 pixels, generous blank margins,\nno cropping or ground shadow.\n\n\nDark variant. Uniform charcoal #1F1F1F background, blending smoothly at all\nfour edges. Shapes use Relay Blue #0078D4, pale Chalk #F3F5F7 and muted\nStructural Ink #182B3A. Keep good contrast and quiet, unlit negative space.\n",
+        "width": 1024,
+        "height": 1024
+      },
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "postProcessing": "Resized to 480x480; WebP quality=88 method=6",
+      "sourceAsset": "gateways-dark.png",
+      "sourceSha256": "06a05c47541f3903b5ef12aed4ad3010069dd70c3773ec1386cbb2959c347ad4",
+      "asset": "assets/gateways-dark.webp",
+      "sha256": "3671356e0a4c287f7b094971d561557cef431c82199b9194c63be1277583f6f6"
+    }
+  ],
+  "inventory": [
+    {
+      "asset": "assets/apple-touch-icon.png",
+      "sha256": "7bb5100e473d8fe07ee1d0f2e1aa51f32802aa46c23c4ea44e4fae47bde19afa",
+      "bytes": 1273
+    },
+    {
+      "asset": "assets/connections-dark.webp",
+      "sha256": "00daa873aebeda317fe48e186f20ea44b2602ad91d7c086f2997139cef54fd58",
+      "bytes": 2154
+    },
+    {
+      "asset": "assets/connections-light.webp",
+      "sha256": "a8c5173db04649e4393113c9c318aef82599841db6cd2dad0f576ff3ab4a4ee7",
+      "bytes": 1910
+    },
+    {
+      "asset": "assets/favicon.ico",
+      "sha256": "88316eb40a963b9bcbe70990a9daf90f5fd7ffb0a37f899dcc543ee8cfbbaaf7",
+      "bytes": 1924
+    },
+    {
+      "asset": "assets/favicon.svg",
+      "sha256": "085bfa3458e21acbb1783a26b3567c179d9f65e6218c8645ae3832b62968db95",
+      "bytes": 367
+    },
+    {
+      "asset": "assets/gateways-dark.webp",
+      "sha256": "3671356e0a4c287f7b094971d561557cef431c82199b9194c63be1277583f6f6",
+      "bytes": 2572
+    },
+    {
+      "asset": "assets/gateways-light.webp",
+      "sha256": "1a67a0236539e453561c3fda79f009c9e02e325eb5b8b1c0f9baefd29e992421",
+      "bytes": 1752
+    },
+    {
+      "asset": "assets/hero-dark.webp",
+      "sha256": "33dfc80a90792489a79f6b3af8cf32821278489bf4d73b8860cda1146bfdcc3c",
+      "bytes": 8652
+    },
+    {
+      "asset": "assets/hero-light.webp",
+      "sha256": "865f0914ea938432a103ceb5c484a8cbc69ba607af4a92cf23826a694ebd50e2",
+      "bytes": 6280
+    },
+    {
+      "asset": "assets/icon-192.png",
+      "sha256": "51d0ec307ede4a4330ff5620f39ec04c7c15a39359741ce515be4685d442a01d",
+      "bytes": 1217
+    },
+    {
+      "asset": "assets/icon-512.png",
+      "sha256": "14c990d70d1f7067476a4af875735e8cad2893546e036d312a1c9854b2bafa04",
+      "bytes": 2549
+    },
+    {
+      "asset": "assets/icon-maskable-512.png",
+      "sha256": "c0de58d4fd3adbc973f28aa50b9e2944d8943f7fee84ad320786314288ffdb2d",
+      "bytes": 2677
+    },
+    {
+      "asset": "assets/lockup-horizontal-dark.svg",
+      "sha256": "b99d777f775334f6da7953c136192ccfc51cb766e1b1b3bef061df277f55b6f4",
+      "bytes": 13000
+    },
+    {
+      "asset": "assets/lockup-horizontal-light.svg",
+      "sha256": "d039f65cf5a24d41aea2a05185528284c9a978dbd546f5dadc426ccb1a49686d",
+      "bytes": 13000
+    },
+    {
+      "asset": "assets/lockup-horizontal-mono.svg",
+      "sha256": "1efdf75964b14a3a70acb30aea5e8a9c89669620d0c20a3a87f7b5f5c083911a",
+      "bytes": 13135
+    },
+    {
+      "asset": "assets/lockup-stacked-dark.svg",
+      "sha256": "fb96cc5f8df299ba55c7ab9fa304a8650361f6c60f18e32a3291041af6de6c6a",
+      "bytes": 13805
+    },
+    {
+      "asset": "assets/lockup-stacked-light.svg",
+      "sha256": "35288da63263b185e30bddf52e6219f4a6cfa9de126a0f5b388038918d2c271e",
+      "bytes": 13805
+    },
+    {
+      "asset": "assets/lockup-stacked-mono.svg",
+      "sha256": "ed8139989a96d96323d8105d1edd17dc8037974b923abe7b39ea0e1ecfddb064",
+      "bytes": 13940
+    },
+    {
+      "asset": "assets/mark-dark.svg",
+      "sha256": "ee8620be555ed6ca12f6daab9fa8da3d70df14c30b07bd6dc2323bb95c8c0d3a",
+      "bytes": 248
+    },
+    {
+      "asset": "assets/mark-light.svg",
+      "sha256": "14b8d60da70cbd63a108d2b861da891293d5d734b5445b6f48f228be3314e574",
+      "bytes": 248
+    },
+    {
+      "asset": "assets/mark-mono.svg",
+      "sha256": "e877899dfa536edfb16011198906b97c7e9e3b34837020748debe31e9ac31e67",
+      "bytes": 258
+    },
+    {
+      "asset": "assets/profiles-dark.webp",
+      "sha256": "ee69357985f35c97951f1f8816c58788f13fa0fafb7abf50d1b97c52b05b9877",
+      "bytes": 2718
+    },
+    {
+      "asset": "assets/profiles-light.webp",
+      "sha256": "29a3f3f1da2f231fc8a237cb0473f92b83cfd989f3dec6cb54d393575d2d4995",
+      "bytes": 2700
+    },
+    {
+      "asset": "assets/readme-banner-dark.svg",
+      "sha256": "465b9f561ffed5b711c80d0597ad5950965a81d91a2dabed8abfe47946908d63",
+      "bytes": 39346
+    },
+    {
+      "asset": "assets/readme-banner-light.svg",
+      "sha256": "46da79ca6952401b895dc76eb235e56921f13f090abee30f803a77e58b52f8b2",
+      "bytes": 36186
+    },
+    {
+      "asset": "assets/site.webmanifest",
+      "sha256": "9a5710a4498e1fb8136cd1bbc85e6440d4d0037f3827b736fffed16fb9d10c2a",
+      "bytes": 700
+    },
+    {
+      "asset": "assets/social-preview.png",
+      "sha256": "1ef2759c991f9a3c48257911b088ae3376618f42c5ef5cd18703aa88e9b19ffc",
+      "bytes": 58730
+    },
+    {
+      "asset": "assets/wordmark-dark.svg",
+      "sha256": "21cb280a2c0264cb132703112bf8f8470f71370baa31e9772b63d07261d8e002",
+      "bytes": 4438
+    },
+    {
+      "asset": "assets/wordmark-light.svg",
+      "sha256": "399d75951e1b5db72be5412f565c144b4acffa803bbb3273fafccbb8887f0d75",
+      "bytes": 4438
+    },
+    {
+      "asset": "assets/wordmark-mono.svg",
+      "sha256": "5dddf530931f4152b6ca313665d8984346150650c2c5f1362b41450697a928b6",
+      "bytes": 4478
+    }
+  ],
+  "notice": "Generated artwork is not a Microsoft endorsement. No trademark clearance claimed. Raster conversion may strip embedded generation metadata; retain this provenance."
+}
